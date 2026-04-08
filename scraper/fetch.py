@@ -1,21 +1,34 @@
 """
 Osceola County Florida – Motivated Seller Lead Scraper
 =======================================================
-Confirmed API (from DevTools):
+Confirmed API endpoint (from DevTools):
   POST https://officialrecords.osceolaclerk.org/browserview/api/search
-  Payload: {
-    "Party":      "",          # leave blank – we search by doc type only
-    "DocTypes":   "LP",        # comma-separated codes, e.g. "LP,NOFC"
+
+Confirmed payload shape:
+  {
+    "Party":      "",          # MUST be empty — search by doc type only
+    "DocTypes":   "LP,NOFC",   # comma-separated codes
     "FromDate":   "20260401",  # YYYYMMDD
     "ToDate":     "20260408",  # YYYYMMDD
-    "MaxRows":    0,
-    "RowsPerPage":0,
-    "StartRow":   0
+    "MaxRows":    500,         # rows per page
+    "RowsPerPage":500,
+    "StartRow":   0            # 0-based offset for pagination
   }
-  Response: JSON array of record objects.
+
+Confirmed response fields (from live API sample):
+  doc_id, party_code, party_name, cross_party_name,
+  rec_date ("2026-01-13T00:00:00"), doc_type, file_num,
+  book, page, legal_1, doc_status,
+  _total_rows, _start_row, _end_row, _max_rows
+
+Key facts:
+  - Same document appears multiple times (once per party name variant)
+    → deduplicate on file_num
+  - party_name  = grantor/owner
+  - cross_party_name = grantee
+  - Comma-separated DocTypes confirmed working
 """
 
-import asyncio
 import csv
 import io
 import json
@@ -42,65 +55,61 @@ logging.basicConfig(
 log = logging.getLogger("fetch")
 
 # ── confirmed constants ────────────────────────────────────────────────────────
-API_URL      = "https://officialrecords.osceolaclerk.org/browserview/api/search"
-BROWSE_URL   = "https://officialrecords.osceolaclerk.org/browserview/"
-DOC_URL      = "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber={}"
+API_URL    = "https://officialrecords.osceolaclerk.org/browserview/api/search"
+BROWSE_URL = "https://officialrecords.osceolaclerk.org/browserview/"
+DOC_URL    = "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber={}"
 
 LOOKBACK     = int(os.getenv("LOOKBACK_DAYS", "7"))
 OUTPUT_PATHS = [Path("dashboard/records.json"), Path("data/records.json")]
 GHL_CSV_PATH = Path("data/ghl_export.csv")
 
-# Batch size: how many doc-type codes to send per API call (comma-separated).
-# The portal accepts multiple; we keep batches small to avoid server limits.
-BATCH_SIZE = 4
+PAGE_SIZE  = 500   # rows per API call
+BATCH_SIZE = 4     # doc-type codes per API call (comma-separated)
 
 # Document type map  {code: (category, label)}
 DOC_TYPES = {
     "LP":       ("foreclosure", "Lis Pendens"),
-    "DEATH":    ("death",      "death certificate"),
     "NOFC":     ("foreclosure", "Notice of Foreclosure"),
     "TAXDEED":  ("tax",         "Tax Deed"),
-    "TAX":      ("tax",         "Tax Lien"),
-    "JUDG":     ("judgment",    "Judgment"),
+    "JUD":      ("judgment",    "Judgment"),
     "CCJ":      ("judgment",    "Certified Judgment"),
     "DRJUD":    ("judgment",    "Domestic Judgment"),
-    "F JUDG":   ("judgment",   "Foreign Judgment"),
     "LNCORPTX": ("lien",       "Corp Tax Lien"),
     "LNIRS":    ("lien",       "IRS Lien"),
-    "FTL":      ("lien",       "Federal Lien"),
-    "LIEN":     ("lien",       "Lien"),
+    "LNFED":    ("lien",       "Federal Lien"),
+    "LN":       ("lien",       "Lien"),
     "LNMECH":   ("lien",       "Mechanic Lien"),
     "LNHOA":    ("lien",       "HOA Lien"),
-    "MEDLIEN":  ("lien",       "Medicaid Lien"),
-    "PROB":     ("probate",    "Probate Document"),
-    "PROBATE":  ("probate",    "Probate"), 
+    "MEDLN":    ("lien",       "Medicaid Lien"),
+    "PRO":      ("probate",    "Probate Document"),
     "NOC":      ("notice",     "Notice of Commencement"),
     "RELLP":    ("notice",     "Release Lis Pendens"),
 }
 
 SESSION_HEADERS = {
-    "User-Agent":     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                      "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-    "Accept":         "application/json, text/plain, */*",
-    "Content-Type":   "application/json",
-    "Referer":        BROWSE_URL,
-    "Origin":         "https://officialrecords.osceolaclerk.org",
+    "User-Agent":       "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                        "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Accept":           "application/json, text/plain, */*",
+    "Content-Type":     "application/json",
+    "Referer":          BROWSE_URL,
+    "Origin":           "https://officialrecords.osceolaclerk.org",
     "X-Requested-With": "XMLHttpRequest",
 }
 
 # ── helpers ───────────────────────────────────────────────────────────────────
-def _norm_date(raw: str) -> str:
-    raw = (raw or "").strip()
-    for fmt in ("%m/%d/%Y", "%Y%m%d", "%Y-%m-%d", "%m-%d-%Y",
+def _norm_date(raw) -> str:
+    """Normalise any date format to YYYY-MM-DD."""
+    if not raw:
+        return ""
+    raw = str(raw).strip()
+    # ISO with time: "2026-01-13T00:00:00" → strip time
+    raw = raw.split("T")[0]
+    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%Y%m%d", "%m-%d-%Y",
                 "%d-%b-%Y", "%B %d, %Y", "%m/%d/%y"):
         try:
             return datetime.strptime(raw, fmt).strftime("%Y-%m-%d")
         except ValueError:
             pass
-    # Handle millisecond timestamps: "/Date(1234567890000)/"
-    m = re.search(r"/Date\((\d+)\)/", raw)
-    if m:
-        return datetime.utcfromtimestamp(int(m.group(1)) / 1000).strftime("%Y-%m-%d")
     return raw
 
 def _parse_amount(raw) -> float:
@@ -124,18 +133,18 @@ def _yyyymmdd(dt: datetime) -> str:
 # ── API client ────────────────────────────────────────────────────────────────
 class OsceolaAPI:
     """
-    Thin wrapper around the confirmed NewVision API endpoint.
+    Direct client for the confirmed NewVision API.
 
-    Confirmed payload shape (from browser DevTools):
-      {
-        "Party":      "",        # left blank – filter by doc type only
-        "DocTypes":   "LP",      # comma-separated type codes
-        "FromDate":   "20260401",
-        "ToDate":     "20260408",
-        "MaxRows":    0,
-        "RowsPerPage":0,
-        "StartRow":   0
-      }
+    Pagination:
+      Each response row contains _total_rows, _start_row, _end_row.
+      We keep requesting with increasing StartRow until we have all rows.
+
+    Deduplication:
+      The API returns one row per party-name variant on a document.
+      E.g. file_num 2026004910 appears 3× for "SMITH LANIS B",
+      "SMITH LANIS BURT", "SMITH AMANDA R" on the same document.
+      We dedup on file_num, keeping the row with party_code == "D"
+      (direct/grantor) when available, else the first row seen.
     """
 
     def __init__(self):
@@ -143,106 +152,116 @@ class OsceolaAPI:
         self.session.headers.update(SESSION_HEADERS)
         self._seeded = False
 
-    def _seed_session(self):
-        """Load the SPA once so the server sets any required session cookies."""
+    def _seed(self):
         if self._seeded:
             return
         try:
             r = self.session.get(BROWSE_URL, timeout=20)
-            log.info("Session seeded from %s  (HTTP %d)", BROWSE_URL, r.status_code)
+            log.info("Session seeded  (HTTP %d)", r.status_code)
         except Exception as exc:
             log.warning("Session seed failed: %s", exc)
         self._seeded = True
 
-    def search_batch(self, doc_types: list[str],
-                     from_date: datetime, to_date: datetime) -> list[dict]:
+    # ── single paginated fetch for one batch of doc types ────────────────────
+    def fetch_batch(self, doc_codes: list[str],
+                    from_date: datetime, to_date: datetime) -> list[dict]:
         """
-        Call the API for a batch of doc-type codes.
-        Returns the raw JSON array (list of record dicts).
+        Fetch ALL pages for a comma-joined set of doc-type codes.
+        Returns raw API rows (may contain duplicates — caller dedupes).
         """
-        self._seed_session()
+        self._seed()
+        codes     = ",".join(doc_codes)
+        all_rows  : list[dict] = []
+        start_row = 0
 
-        payload = {
-            "Party":      "",
-            "DocTypes":   ",".join(doc_types),
-            "FromDate":   _yyyymmdd(from_date),
-            "ToDate":     _yyyymmdd(to_date),
-            "MaxRows":    0,
-            "RowsPerPage":0,
-            "StartRow":   0,
-        }
+        while True:
+            payload = {
+                "Party":      "",          # empty = no name filter
+                "DocTypes":   codes,
+                "FromDate":   _yyyymmdd(from_date),
+                "ToDate":     _yyyymmdd(to_date),
+                "MaxRows":    PAGE_SIZE,
+                "RowsPerPage":PAGE_SIZE,
+                "StartRow":   start_row,
+            }
 
+            rows = self._post(payload)
+            if not rows:
+                break
+
+            all_rows.extend(rows)
+
+            # Read pagination metadata from first row
+            total = rows[0].get("_total_rows") or rows[0].get("_max_rows") or 0
+            end   = rows[0].get("_end_row", start_row + len(rows))
+            log.debug("  [%s] rows %d-%d of %d", codes, start_row + 1, end, total)
+
+            if end >= total or len(rows) < PAGE_SIZE:
+                break
+            start_row = end   # next page starts where this one ended
+
+        return all_rows
+
+    def _post(self, payload: dict) -> list[dict]:
         for attempt in range(3):
             try:
-                log.debug("POST %s  payload=%s", API_URL, payload)
                 r = self.session.post(API_URL, json=payload, timeout=30)
-                log.debug("HTTP %d  len=%d", r.status_code, len(r.content))
-
                 if r.status_code == 200:
                     data = r.json()
                     if isinstance(data, list):
                         return data
-                    # Some NewVision versions wrap in an object
-                    for key in ("results","records","data","items","Documents"):
-                        if key in data and isinstance(data[key], list):
+                    # wrapped response
+                    for key in ("results", "records", "data", "items"):
+                        if isinstance(data.get(key), list):
                             return data[key]
-                    log.warning("Unexpected JSON shape: %s", str(data)[:200])
+                    log.warning("Unexpected JSON shape: %s", str(data)[:300])
                     return []
-
-                log.warning("HTTP %d for batch %s (attempt %d)",
-                            r.status_code, doc_types, attempt + 1)
-                time.sleep(2 ** attempt)
-
+                log.warning("HTTP %d (attempt %d)", r.status_code, attempt + 1)
             except Exception as exc:
-                log.error("API error (attempt %d): %s", attempt + 1, exc)
-                time.sleep(2 ** attempt)
-
+                log.error("POST error (attempt %d): %s", attempt + 1, exc)
+            time.sleep(2 ** attempt)
         return []
 
-    def normalise(self, row: dict, batch_types: list[str]) -> Optional[dict]:
+    # ── normalise one raw API row ─────────────────────────────────────────────
+    @staticmethod
+    def normalise(row: dict) -> Optional[dict]:
         """
-        Map a raw API row to our internal schema.
-        NewVision field names seen in typical responses:
-          file_num, doc_type, rec_date, direct_name, indirect_name,
-          legal_1, consid_1, book, page
-        """
-        def g(*keys):
-            for k in keys:
-                v = (row.get(k) or row.get(k.lower()) or
-                     row.get(k.upper()) or "")
-                if v:
-                    return str(v).strip()
-            return ""
+        Map confirmed API field names to our internal schema.
 
-        # Instrument / document number
-        doc_num = g("file_num", "InstrumentNumber", "instrument_number",
-                    "cfn", "CFN", "DocNumber")
-        if not doc_num:
+        Confirmed fields:
+          file_num          → doc_num
+          doc_type          → doc_type
+          rec_date          → filed  (ISO "2026-01-13T00:00:00")
+          party_name        → grantor / owner
+          cross_party_name  → grantee
+          legal_1           → legal
+          book, page        → for building clerk URL
+        """
+        file_num = str(row.get("file_num") or "").strip()
+        if not file_num:
             return None
 
-        doc_type = g("doc_type", "DocType", "type", "Type") or batch_types[0]
-        filed    = _norm_date(g("rec_date", "RecordedDate", "date", "Date",
-                                "filed_date"))
-        grantor  = g("direct_name", "Grantor", "grantor", "Party1",
-                     "direct_party", "grantorName")
-        grantee  = g("indirect_name", "Grantee", "grantee", "Party2",
-                     "indirect_party", "granteeName")
-        amount   = _parse_amount(g("consid_1", "Amount", "Consideration",
-                                   "consideration", "amount"))
-        legal    = g("legal_1", "LegalDescription", "legal", "Legal")
+        doc_type = str(row.get("doc_type") or "").upper().strip()
+        filed    = _norm_date(row.get("rec_date", ""))
+        grantor  = str(row.get("party_name") or "").strip()
+        grantee  = str(row.get("cross_party_name") or "").strip()
+        legal    = str(row.get("legal_1") or "").strip()
+        # consid_1 may or may not be present in this endpoint
+        amount   = _parse_amount(row.get("consid_1") or row.get("amount") or 0)
 
-        # Build a direct deep-link into the portal
-        clerk_url = DOC_URL.format(doc_num.replace(" ", ""))
+        clerk_url = DOC_URL.format(file_num)
 
         return {
-            "doc_num":  doc_num,
-            "doc_type": doc_type.upper().strip(),
-            "filed":    filed,
-            "grantor":  grantor,
-            "grantee":  grantee,
-            "amount":   amount,
-            "legal":    legal,
-            "clerk_url":clerk_url,
+            "doc_num":   file_num,
+            "doc_type":  doc_type,
+            "filed":     filed,
+            "grantor":   grantor,
+            "grantee":   grantee,
+            "amount":    amount,
+            "legal":     legal,
+            "clerk_url": clerk_url,
+            # keep party_code for dedup preference (D = direct/grantor)
+            "_party_code": str(row.get("party_code") or "").upper(),
         }
 
 
@@ -250,159 +269,50 @@ class OsceolaAPI:
 def scrape_clerk(doc_types: list[str],
                  from_date: datetime, to_date: datetime) -> list[dict]:
     """
-    Batch doc types, hit the confirmed API, return normalised records.
-    Falls back to Playwright if the API returns nothing at all.
+    Batch doc types → hit confirmed API → paginate → dedup → return records.
     """
-    api     = OsceolaAPI()
-    raw_all : list[dict] = []
+    api      = OsceolaAPI()
+    # file_num → best row seen so far
+    seen: dict[str, dict] = {}
 
-    # Split into batches
     batches = [doc_types[i:i+BATCH_SIZE]
                for i in range(0, len(doc_types), BATCH_SIZE)]
 
     for batch in batches:
         codes = ",".join(batch)
-        rows  = api.search_batch(batch, from_date, to_date)
-        log.info("  API [%-40s] -> %d rows", codes, len(rows))
+        log.info("Fetching [%s]  %s → %s",
+                 codes, _yyyymmdd(from_date), _yyyymmdd(to_date))
 
-        for row in rows:
-            rec = api.normalise(row, batch)
-            if rec:
-                raw_all.append(rec)
+        raw_rows = api.fetch_batch(batch, from_date, to_date)
+        batch_new = 0
 
-        time.sleep(0.5)   # be polite
+        for row in raw_rows:
+            rec = OsceolaAPI.normalise(row)
+            if not rec:
+                continue
 
-    if raw_all:
-        log.info("API total: %d records", len(raw_all))
-        return _dedup(raw_all)
+            fn = rec["doc_num"]
+            pc = rec.pop("_party_code", "")
 
-    # ── Playwright fallback ───────────────────────────────────────────────────
-    log.warning("API returned 0 records — trying Playwright fallback")
-    try:
-        pw_recs = asyncio.run(_playwright_fallback(doc_types, from_date, to_date))
-        log.info("Playwright fallback: %d records", len(pw_recs))
-        return _dedup(pw_recs)
-    except Exception as exc:
-        log.error("Playwright fallback failed: %s", exc)
-        log.debug(traceback.format_exc())
-        return []
+            if fn not in seen:
+                seen[fn] = rec
+                batch_new += 1
+            else:
+                # Prefer the "direct" party (grantor) over indirect
+                if pc == "D" and seen[fn].get("_kept_code") != "D":
+                    seen[fn] = rec
+                    seen[fn]["_kept_code"] = "D"
 
+        log.info("  → %d unique new records  (batch raw: %d)",
+                 batch_new, len(raw_rows))
+        time.sleep(0.5)
 
-def _dedup(records: list[dict]) -> list[dict]:
-    seen:   set[str]   = set()
-    unique: list[dict] = []
+    records = list(seen.values())
+    # strip internal key
     for r in records:
-        key = r.get("doc_num", "")
-        if key and key in seen:
-            continue
-        if key:
-            seen.add(key)
-        unique.append(r)
-    return unique
+        r.pop("_kept_code", None)
 
-
-# ── Playwright fallback ───────────────────────────────────────────────────────
-async def _playwright_fallback(doc_types: list[str],
-                               from_date: datetime,
-                               to_date: datetime) -> list[dict]:
-    """
-    Drive the Angular SPA with Playwright.
-    Uses XHR interception — captures the same JSON the API returns,
-    but lets the browser handle auth/cookies automatically.
-    """
-    try:
-        from playwright.async_api import async_playwright, TimeoutError as PWTimeout
-    except ImportError:
-        log.error("playwright not installed")
-        return []
-
-    captured: list[dict] = []
-
-    async with async_playwright() as pw:
-        browser = await pw.chromium.launch(
-            headless=True,
-            args=["--no-sandbox", "--disable-dev-shm-usage"],
-        )
-        ctx = await browser.new_context(
-            user_agent=SESSION_HEADERS["User-Agent"],
-            viewport={"width": 1440, "height": 900},
-        )
-        page = await ctx.new_page()
-
-        # Intercept the confirmed API endpoint
-        async def on_response(response):
-            if "api/search" in response.url and response.status == 200:
-                try:
-                    body = await response.json()
-                    if isinstance(body, list):
-                        log.info("XHR intercepted: %d rows from %s",
-                                 len(body), response.url)
-                        captured.extend(body)
-                except Exception:
-                    pass
-
-        page.on("response", on_response)
-
-        # Load the SPA
-        try:
-            await page.goto(BROWSE_URL, wait_until="domcontentloaded", timeout=30000)
-        except PWTimeout:
-            pass
-
-        # Wait for Angular to render (look for any input)
-        try:
-            await page.wait_for_selector("input", timeout=20000)
-        except PWTimeout:
-            log.warning("Playwright: page inputs never appeared")
-
-        # Process each batch
-        batches = [doc_types[i:i+BATCH_SIZE]
-                   for i in range(0, len(doc_types), BATCH_SIZE)]
-
-        for batch in batches:
-            # Use page.evaluate to call the API directly via fetch()
-            # This runs inside the browser so it inherits all session cookies
-            payload = {
-                "Party":      "",
-                "DocTypes":   ",".join(batch),
-                "FromDate":   _yyyymmdd(from_date),
-                "ToDate":     _yyyymmdd(to_date),
-                "MaxRows":    0,
-                "RowsPerPage":0,
-                "StartRow":   0,
-            }
-            try:
-                result = await page.evaluate("""
-                    async (payload) => {
-                        const r = await fetch('/browserview/api/search', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify(payload)
-                        });
-                        return await r.json();
-                    }
-                """, payload)
-                if isinstance(result, list):
-                    log.info("  PW eval [%s] -> %d rows",
-                             ",".join(batch), len(result))
-                    captured.extend(result)
-            except Exception as exc:
-                log.warning("PW eval failed for %s: %s", batch, exc)
-
-            await asyncio.sleep(0.5)
-
-        await browser.close()
-
-    # Normalise captured rows
-    api     = OsceolaAPI()
-    records = []
-    for row in captured:
-        rec = api.normalise(row, doc_types)
-        if rec:
-            records.append(rec)
+    log.info("Total unique records: %d", len(records))
     return records
 
 
@@ -429,7 +339,7 @@ class ParcelLookup:
         if data:
             self._parse_dbf(data)
         else:
-            log.warning("Could not download parcel DBF – address enrichment disabled.")
+            log.warning("Parcel DBF unavailable – address enrichment disabled.")
         self._loaded = True
 
     def _fetch_dbf(self) -> Optional[bytes]:
@@ -487,7 +397,7 @@ class ParcelLookup:
                     self._by_parcel[p["parcel_id"]] = p
                 for v in self._variants(p["owner"]):
                     self._by_name[v] = p
-            log.info("Parcels: %d records, %d name variants",
+            log.info("Parcels loaded: %d records, %d name variants",
                      len(self._by_parcel), len(self._by_name))
         except Exception as exc:
             log.error("DBF parse: %s", exc)
@@ -537,11 +447,12 @@ class ParcelLookup:
 
 
 # ── score & flags ─────────────────────────────────────────────────────────────
-def compute_flags_and_score(rec: dict, today: datetime) -> tuple[list[str], int]:
+def compute_flags_and_score(rec: dict,
+                            today: datetime) -> tuple[list[str], int]:
     flags    = []
     doc_type = rec.get("doc_type", "").upper()
     cat      = rec.get("cat", "")
-    owner    = rec.get("owner", rec.get("grantor", ""))
+    owner    = rec.get("owner", "")
     amount   = rec.get("amount", 0) or 0
     has_addr = bool(rec.get("prop_address") or rec.get("mail_address"))
     filed    = rec.get("filed", "")
@@ -558,7 +469,8 @@ def compute_flags_and_score(rec: dict, today: datetime) -> tuple[list[str], int]
         flags.append("Mechanic lien")
     if doc_type == "PRO":
         flags.append("Probate / estate")
-    if re.search(r"\bLLC\b|\bINC\b|\bCORP\b|\bLTD\b|\bTRUST\b", owner.upper()):
+    if re.search(r"\bLLC\b|\bINC\b|\bCORP\b|\bLTD\b|\bTRUST\b",
+                 owner.upper()):
         flags.append("LLC / corp owner")
     if _is_recent(filed, today, 7):
         flags.append("New this week")
@@ -576,7 +488,6 @@ def compute_flags_and_score(rec: dict, today: datetime) -> tuple[list[str], int]
         score += 5
     if has_addr:
         score += 5
-
     return flags, min(score, 100)
 
 
@@ -626,7 +537,7 @@ def save_json(records: list[dict], today: datetime,
     payload = {
         "fetched_at":  today.isoformat(),
         "source":      "Osceola County Official Records – officialrecords.osceolaclerk.org",
-        "date_range":  {
+        "date_range": {
             "from": from_date.strftime("%m/%d/%Y"),
             "to":   to_date.strftime("%m/%d/%Y"),
         },
@@ -655,10 +566,13 @@ def save_ghl_csv(records: list[dict]):
         w = csv.DictWriter(f, fieldnames=cols)
         w.writeheader()
         for r in records:
-            parts = r.get("owner", "").replace(",", "").split()
+            # party_name format is "LAST FIRST" — split for GHL
+            parts = r.get("owner", "").split()
+            first = parts[-1] if len(parts) > 1 else ""
+            last  = " ".join(parts[:-1]) if len(parts) > 1 else parts[0] if parts else ""
             w.writerow({
-                "First Name":             parts[0] if parts else "",
-                "Last Name":              " ".join(parts[1:]) if len(parts) > 1 else "",
+                "First Name":             first,
+                "Last Name":              last,
                 "Mailing Address":        r.get("mail_address", ""),
                 "Mailing City":           r.get("mail_city", ""),
                 "Mailing State":          r.get("mail_state", "FL"),
@@ -695,18 +609,13 @@ def main():
     log.info("Types  : %s", ", ".join(DOC_TYPES.keys()))
     log.info("=" * 60)
 
-    # 1. Load parcel data (address enrichment)
     parcel = ParcelLookup()
     parcel.load()
 
-    # 2. Scrape via confirmed API
     raw = scrape_clerk(list(DOC_TYPES.keys()), from_date, today)
-    log.info("Raw records: %d", len(raw))
+    log.info("Raw unique records: %d", len(raw))
 
-    # 3. Enrich with category, flags, score, addresses
     records = enrich(raw, parcel, today)
-
-    # 4. Save outputs
     save_json(records, today, from_date, today)
     save_ghl_csv(records)
 
