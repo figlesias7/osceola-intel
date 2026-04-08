@@ -32,7 +32,7 @@ logging.basicConfig(
 log = logging.getLogger("fetch")
 
 # ── constants ─────────────────────────────────────────────────────────────────
-CLERK_BASE   = "https://officialrecords.osceolaclerk.org/browserview/"
+CLERK_BASE   = "https://osceolaclerk.com/records-center/"
 LOOKBACK     = int(os.getenv("LOOKBACK_DAYS", "7"))
 OUTPUT_PATHS = [
     Path("dashboard/records.json"),
@@ -215,255 +215,387 @@ class ParcelLookup:
         return {}
 
 
-# ── clerk portal scraper ──────────────────────────────────────────────────────
+# ── NewVision clerk portal scraper ────────────────────────────────────────────
+#
+# The Osceola Clerk uses NewVision Systems (© 2018 NewVision Systems Corp).
+# Actual search app URL discovered at runtime from the records-center page.
+# UI anatomy (confirmed from screenshot):
+#   • Tabs: Party | Document Type | Instrument Number | Book/Page
+#   • "Document Type (Optional)" → plain text input  (comma-separated codes)
+#   • "Select Document Types (Optional)" → checkbox list (we use the text input)
+#   • "Date Range (Optional)" → From / To  MM/DD/YYYY inputs
+#   • Quicklinks: "7 Days" / "30 Days" / "90 Days"   (we click "7 Days")
+#   • [Search] button top-right of the form
+#   • Results tab shows a table; paginated with Next link
+#
+# Strategy: navigate to the search app, click the "Document Type" tab,
+# type our comma-separated codes into the Document Type text input,
+# click "7 Days" quicklink, then click Search.  Repeat per batch if needed
+# (portal may cap results per search; we batch ≤10 codes at a time).
+
+# We discover the actual app URL from the clerk landing page link
+_NEWVISION_SEARCH_URL: Optional[str] = None
+
+NEWVISION_SEEDS = [
+    # Most common NewVision deploy pattern for FL clerks
+    "https://or.osceolaclerk.com/or/",
+    "https://www.osceolaclerk.com/official-records/",
+    "https://osceolaclerk.com/official-records/",
+]
+
+
+async def _discover_search_url(page) -> str:
+    """
+    Navigate to the clerk landing page and extract the actual search-app URL,
+    or fall back to known NewVision patterns.
+    """
+    global _NEWVISION_SEARCH_URL
+    if _NEWVISION_SEARCH_URL:
+        return _NEWVISION_SEARCH_URL
+
+    try:
+        await page.goto(CLERK_BASE, wait_until="domcontentloaded", timeout=20000)
+        # Look for any link whose href contains typical NewVision path segments
+        for a in await page.locator("a").all():
+            try:
+                href = await a.get_attribute("href") or ""
+                text = (await a.inner_text()).lower()
+                if any(k in href.lower() for k in ["/or/", "official-record", "newvision", "search.aspx"]):
+                    _NEWVISION_SEARCH_URL = href if href.startswith("http") else urljoin(CLERK_BASE, href)
+                    log.info("Discovered search URL from landing page: %s", _NEWVISION_SEARCH_URL)
+                    return _NEWVISION_SEARCH_URL
+                if any(k in text for k in ["official record", "search record", "public record"]):
+                    if href and not href.startswith("#"):
+                        _NEWVISION_SEARCH_URL = href if href.startswith("http") else urljoin(CLERK_BASE, href)
+                        log.info("Discovered search URL via link text: %s", _NEWVISION_SEARCH_URL)
+                        return _NEWVISION_SEARCH_URL
+            except Exception:
+                pass
+    except Exception as exc:
+        log.debug("Landing page discovery failed: %s", exc)
+
+    # Fall back: try each seed URL, use the first that loads with NewVision markup
+    for url in NEWVISION_SEEDS:
+        try:
+            resp = await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+            if resp and resp.status < 400:
+                content = await page.content()
+                if "newvision" in content.lower() or "party name" in content.lower() or "document type" in content.lower():
+                    _NEWVISION_SEARCH_URL = page.url
+                    log.info("Using seed search URL: %s", _NEWVISION_SEARCH_URL)
+                    return _NEWVISION_SEARCH_URL
+        except Exception:
+            pass
+
+    _NEWVISION_SEARCH_URL = NEWVISION_SEEDS[0]
+    log.warning("Could not discover search URL; defaulting to %s", _NEWVISION_SEARCH_URL)
+    return _NEWVISION_SEARCH_URL
+
+
 async def scrape_clerk(doc_types: list[str], start_date: str, end_date: str) -> list[dict]:
     """
-    Use Playwright to drive the Osceola Clerk records search portal.
+    Drive the NewVision clerk portal with Playwright.
+    Batches doc types in groups of 10 (comma-separated in the type field).
     Returns a list of raw record dicts.
     """
     try:
-        from playwright.async_api import async_playwright, TimeoutError as PWTimeout
+        from playwright.async_api import async_playwright
     except ImportError:
         log.error("playwright not installed")
         return []
 
     records = []
-    log.info("Launching Playwright for clerk portal…")
+    log.info("Launching Playwright (NewVision clerk portal)…")
 
     async with async_playwright() as pw:
-        browser = await pw.chromium.launch(headless=True, args=["--no-sandbox"])
-        context = await browser.new_context(
-            user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                       "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        browser = await pw.chromium.launch(
+            headless=True,
+            args=["--no-sandbox", "--disable-dev-shm-usage"],
         )
-        page = await context.new_page()
+        ctx = await browser.new_context(
+            user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                       "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            viewport={"width": 1280, "height": 900},
+        )
+        page = await ctx.new_page()
 
-        for doc_type in doc_types:
+        # Discover the real search app URL once
+        search_url = await _discover_search_url(page)
+
+        # Batch doc types: ≤10 per search to avoid hitting result caps
+        batch_size = 10
+        batches = [doc_types[i:i+batch_size] for i in range(0, len(doc_types), batch_size)]
+
+        for batch in batches:
+            codes = ",".join(batch)
             try:
-                recs = await _search_doc_type(page, doc_type, start_date, end_date)
-                records.extend(recs)
-                log.info("  %s → %d records", doc_type, len(recs))
+                batch_recs = await _run_newvision_search(page, search_url, codes, start_date, end_date)
+                records.extend(batch_recs)
+                log.info("  Batch [%s] → %d records", codes, len(batch_recs))
             except Exception as exc:
-                log.error("Failed scraping %s: %s", doc_type, exc)
+                log.error("Batch [%s] failed: %s", codes, exc)
                 log.debug(traceback.format_exc())
+            await asyncio.sleep(1.5)   # polite pause between batches
 
         await browser.close()
 
     return records
 
 
-async def _search_doc_type(page, doc_type: str, start_date: str, end_date: str) -> list[dict]:
-    """Search the clerk portal for one document type."""
+async def _run_newvision_search(
+    page, search_url: str, doc_codes: str, start_date: str, end_date: str
+) -> list[dict]:
+    """
+    Execute one NewVision search for a comma-separated set of doc type codes.
+    Handles pagination and returns all matching records.
+    """
     from playwright.async_api import TimeoutError as PWTimeout
 
-    records = []
-
+    # ── 1. Load the search page ──────────────────────────────────────────────
     for attempt in range(3):
         try:
-            await page.goto(CLERK_BASE, wait_until="networkidle", timeout=30000)
+            await page.goto(search_url, wait_until="domcontentloaded", timeout=25000)
+            # Wait for the Party Name input to confirm the app loaded
+            await page.wait_for_selector(
+                "input[placeholder*='Party'], input[placeholder*='party'], "
+                "#PartyName, input[id*='arty']",
+                timeout=15000,
+            )
             break
         except PWTimeout:
             if attempt == 2:
-                log.warning("Timed out loading clerk portal for %s", doc_type)
+                log.warning("Search page never loaded for codes: %s", doc_codes)
                 return []
             await asyncio.sleep(3)
 
-    # Look for a search form – try several common patterns
-    # Pattern 1: direct search form on the page
-    found_form = False
-
-    # Try to find document type input / dropdown
+    # ── 2. Click the "Document Type" tab ────────────────────────────────────
+    # NewVision has sub-tabs: Party | Document Type | Instrument Number | Book/Page
     try:
-        # Many FL clerk portals use an iframe or redirect to a search app
-        frames = page.frames
-        for frame in frames:
-            content = await frame.content()
-            if "doc_type" in content.lower() or "document type" in content.lower():
-                page = frame
-                break
+        dt_tab = page.locator(
+            "a:has-text('Document Type'), li:has-text('Document Type'), "
+            "[role='tab']:has-text('Document Type')"
+        )
+        if await dt_tab.count() > 0:
+            await dt_tab.first.click()
+            await page.wait_for_timeout(600)
+    except Exception as exc:
+        log.debug("Doc-type tab click failed (may not be needed): %s", exc)
+
+    # ── 3. Fill the "Document Type (Optional)" text input ───────────────────
+    # NewVision renders this as a plain <input> that accepts comma-separated codes
+    dt_input = page.locator(
+        "input[placeholder*='Document Type'], "
+        "input[placeholder*='document type'], "
+        "#DocumentType, "
+        "input[id*='ocumentType'], "
+        "input[id*='ocType']"
+    )
+    filled = False
+    if await dt_input.count() > 0:
+        await dt_input.first.triple_click()
+        await dt_input.first.fill(doc_codes)
+        filled = True
+        log.debug("Filled Document Type input with: %s", doc_codes)
+    else:
+        log.warning("Could not find Document Type input – will search all types")
+
+    # ── 4. Set date range — click "7 Days" quicklink ────────────────────────
+    # The page has "7 Days", "30 Days", "90 Days" links that auto-fill the range
+    clicked_quick = False
+    try:
+        seven_days = page.locator("a:has-text('7 Days'), button:has-text('7 Days')")
+        if await seven_days.count() > 0:
+            await seven_days.first.click()
+            await page.wait_for_timeout(400)
+            clicked_quick = True
+            log.debug("Clicked '7 Days' quicklink")
     except Exception:
         pass
 
-    # Fill date range
-    try:
-        # Try common field names/IDs
-        for sel in ["#DateFrom", "#BeginDate", "#startDate", "input[name*='date_from']",
-                    "input[name*='DateFrom']", "input[name*='begin']"]:
-            if await page.locator(sel).count() > 0:
-                await page.fill(sel, start_date)
-                break
-
-        for sel in ["#DateTo", "#EndDate", "#endDate", "input[name*='date_to']",
-                    "input[name*='DateTo']", "input[name*='end']"]:
-            if await page.locator(sel).count() > 0:
-                await page.fill(sel, end_date)
-                break
-
-        # Doc type
-        for sel in ["#DocType", "#documentType", "select[name*='doc']",
-                    "input[name*='DocType']"]:
-            if await page.locator(sel).count() > 0:
-                tag = await page.locator(sel).evaluate("el => el.tagName")
-                if tag == "SELECT":
-                    await page.select_option(sel, doc_type)
-                else:
-                    await page.fill(sel, doc_type)
-                found_form = True
-                break
-
-    except Exception as exc:
-        log.debug("Form fill error for %s: %s", doc_type, exc)
-
-    if not found_form:
-        # Fallback: try URL-based search (some FL clerk portals accept GET params)
-        fallback_urls = [
-            f"{CLERK_BASE}?DocType={doc_type}&DateFrom={start_date}&DateTo={end_date}",
-            f"https://or.osceolaclerk.com/or/Search.aspx?DocType={doc_type}&DateFrom={start_date}&DateTo={end_date}",
-            f"https://www.osceolaclerk.com/official-records/?doc_type={doc_type}&from={start_date}&to={end_date}",
-        ]
-        for url in fallback_urls:
+    # Fallback: manually fill From / To date inputs
+    if not clicked_quick:
+        for sel in [
+            "input[placeholder='MM/DD/YYYY']",
+            "input[id*='rom'], input[id*='Begin'], input[id*='Start']",
+            "#DateFrom, #BeginDate, #StartDate",
+        ]:
             try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                content = await page.content()
-                recs = _parse_clerk_results(content, doc_type)
-                if recs:
-                    return recs
+                inputs = await page.locator(sel).all()
+                if len(inputs) >= 2:
+                    await inputs[0].triple_click()
+                    await inputs[0].fill(start_date)
+                    await inputs[1].triple_click()
+                    await inputs[1].fill(end_date)
+                    break
+                elif len(inputs) == 1:
+                    await inputs[0].triple_click()
+                    await inputs[0].fill(start_date)
             except Exception:
                 pass
+
+    # ── 5. Click Search ──────────────────────────────────────────────────────
+    search_btn = page.locator(
+        "input[value='Search'], button:has-text('Search'), "
+        "#SearchButton, #btnSearch, .search-btn"
+    )
+    if await search_btn.count() == 0:
+        log.warning("Search button not found for codes: %s", doc_codes)
         return []
 
-    # Submit search
+    await search_btn.first.click()
+
+    # Wait for Results tab / results table to appear
     try:
-        for sel in ["#SearchButton", "button[type='submit']", "input[type='submit']",
-                    "#btnSearch", ".search-button"]:
-            if await page.locator(sel).count() > 0:
-                await page.click(sel)
-                await page.wait_for_load_state("networkidle", timeout=20000)
-                break
-    except Exception as exc:
-        log.debug("Submit error for %s: %s", doc_type, exc)
+        await page.wait_for_selector(
+            "table tr td, .results-table, #resultsTable, "
+            "[id*='esult'] table, a:has-text('Results')",
+            timeout=20000,
+        )
+    except PWTimeout:
+        log.warning("Results never appeared for codes: %s", doc_codes)
         return []
 
-    # Paginate through results
+    # Small extra wait for JS rendering
+    await page.wait_for_timeout(800)
+
+    # ── 6. Paginate and collect ───────────────────────────────────────────────
+    records = []
     page_num = 0
+    base_url = page.url
+
     while True:
         page_num += 1
-        content = await page.content()
-        new_recs = _parse_clerk_results(content, doc_type)
+        html = await page.content()
+        new_recs = _parse_newvision_results(html, doc_codes, base_url)
         records.extend(new_recs)
+        log.debug("  Page %d: %d new records (running total %d)", page_num, len(new_recs), len(records))
 
-        # Check for next page
-        next_sel = "a:has-text('Next'), a:has-text('>'), .pager-next, #nextPage"
-        if await page.locator(next_sel).count() > 0:
+        # NewVision pagination: "Next" link or ">>" button
+        next_btn = page.locator(
+            "a:has-text('Next'), a:has-text('>>'), "
+            ".pager a:last-child, [aria-label='Next page'], "
+            "a[title='Next Page']"
+        )
+        if await next_btn.count() > 0:
+            is_disabled = await next_btn.first.get_attribute("class") or ""
+            if "disabled" in is_disabled.lower():
+                break
             try:
-                await page.click(next_sel, timeout=5000)
-                await page.wait_for_load_state("networkidle", timeout=15000)
+                await next_btn.first.click()
+                await page.wait_for_load_state("domcontentloaded", timeout=15000)
+                await page.wait_for_timeout(600)
             except Exception:
                 break
         else:
             break
 
-        if page_num > 50:  # safety cap
+        if page_num >= 50:
+            log.warning("Hit 50-page cap for codes: %s", doc_codes)
             break
 
     return records
 
 
-def _parse_clerk_results(html: str, doc_type: str) -> list[dict]:
-    """Parse clerk search results HTML into record dicts."""
+def _parse_newvision_results(html: str, doc_codes: str, base_url: str) -> list[dict]:
+    """
+    Parse the NewVision results page HTML.
+
+    NewVision results tables typically have these columns:
+      Instrument #  |  Type  |  Date  |  Grantor  |  Grantee  |  Book/Page  |  Description/Legal
+
+    Each row links to the document detail via the Instrument # anchor.
+    """
     soup = BeautifulSoup(html, "lxml")
     records = []
 
-    # Common table patterns for FL clerk portals
-    tables = soup.find_all("table")
-    for table in tables:
+    # Find every <table> that has result-like columns
+    for table in soup.find_all("table"):
         rows = table.find_all("tr")
         if len(rows) < 2:
             continue
 
-        # Detect header row
-        headers = [th.get_text(strip=True).lower() for th in rows[0].find_all(["th", "td"])]
-        if not any(k in " ".join(headers) for k in ["doc", "instrument", "book", "grantor", "date"]):
+        # Build header map from first <tr> containing <th> or the first row
+        header_row = rows[0]
+        headers = [c.get_text(strip=True).lower() for c in header_row.find_all(["th", "td"])]
+        joined = " | ".join(headers)
+
+        # Must look like a results table
+        if not any(k in joined for k in ["instrument", "type", "grantor", "date", "recorded"]):
             continue
 
-        col = _map_columns(headers)
+        col = _newvision_col_map(headers)
 
         for row in rows[1:]:
             cells = row.find_all("td")
             if len(cells) < 3:
                 continue
             try:
-                rec = _extract_row(cells, col, doc_type, soup.find("base", href=True))
+                rec = _newvision_extract_row(cells, col, doc_codes, base_url)
                 if rec:
                     records.append(rec)
-            except Exception:
-                pass
-
-    # Also try definition-list / card style layouts
-    for item in soup.select(".record-item, .result-row, .instrument-row"):
-        try:
-            rec = _extract_card(item, doc_type)
-            if rec:
-                records.append(rec)
-        except Exception:
-            pass
+            except Exception as exc:
+                log.debug("Row parse error: %s", exc)
 
     return records
 
 
-def _map_columns(headers: list[str]) -> dict:
-    """Map semantic names to column indices."""
+def _newvision_col_map(headers: list[str]) -> dict:
+    """Map column indices for the NewVision results table."""
     col = {}
     for i, h in enumerate(headers):
-        if any(k in h for k in ["instrument", "doc #", "doc num", "book", "cf#"]):
+        h = h.lower()
+        if any(k in h for k in ["instrument", "instr", "cf#", "doc #", "doc#", "number"]):
             col.setdefault("doc_num", i)
-        if any(k in h for k in ["type", "doc type"]):
+        if any(k in h for k in ["type", "doc type", "document type"]) and "instrument" not in h:
             col.setdefault("doc_type", i)
-        if any(k in h for k in ["date", "filed", "recorded"]):
+        if any(k in h for k in ["date", "filed", "recorded", "record date"]):
             col.setdefault("date", i)
-        if any(k in h for k in ["grantor", "seller", "owner", "from"]):
+        if any(k in h for k in ["grantor", "seller", "from party", "owner"]):
             col.setdefault("grantor", i)
-        if any(k in h for k in ["grantee", "buyer", "to"]):
+        if any(k in h for k in ["grantee", "buyer", "to party"]):
             col.setdefault("grantee", i)
-        if any(k in h for k in ["amount", "consideration", "value"]):
+        if any(k in h for k in ["amount", "consideration", "value", "total"]):
             col.setdefault("amount", i)
-        if any(k in h for k in ["legal", "description", "desc"]):
+        if any(k in h for k in ["legal", "description", "desc", "book"]):
             col.setdefault("legal", i)
     return col
 
 
-def _extract_row(cells: list, col: dict, doc_type: str, base_tag) -> Optional[dict]:
-    texts = [c.get_text(strip=True) for c in cells]
+def _newvision_extract_row(cells: list, col: dict, fallback_type: str, base_url: str) -> Optional[dict]:
+    texts = [c.get_text(" ", strip=True) for c in cells]
     if not any(texts):
         return None
 
-    doc_num  = texts[col.get("doc_num",  0)] if "doc_num"  in col else ""
-    filed    = texts[col.get("date",     1)] if "date"     in col else ""
-    grantor  = texts[col.get("grantor",  2)] if "grantor"  in col else ""
-    grantee  = texts[col.get("grantee",  3)] if "grantee"  in col else ""
-    amount   = texts[col.get("amount",   4)] if "amount"   in col else ""
-    legal    = texts[col.get("legal",    5)] if "legal"    in col else ""
-    dtype    = texts[col.get("doc_type", -1)] if "doc_type" in col else doc_type
+    def get(key, default_idx):
+        idx = col.get(key, default_idx)
+        if 0 <= idx < len(texts):
+            return texts[idx].strip()
+        return ""
 
-    if not doc_num and not grantor:
+    doc_num  = get("doc_num", 0)
+    doc_type = get("doc_type", 1) or fallback_type
+    filed    = get("date", 2)
+    grantor  = get("grantor", 3)
+    grantee  = get("grantee", 4)
+    amount   = get("amount", -1)
+    legal    = get("legal", -1)
+
+    # Skip empty / header-repeat rows
+    if not doc_num or doc_num.lower() in ("instrument #", "cf#", "doc #", "number"):
         return None
 
-    # Find direct link
+    # Extract direct link from the Instrument # cell (col 0 typically)
     link = ""
-    for cell in cells:
-        a = cell.find("a", href=True)
+    link_cell_idx = col.get("doc_num", 0)
+    if link_cell_idx < len(cells):
+        a = cells[link_cell_idx].find("a", href=True)
         if a:
             href = a["href"]
-            if base_tag:
-                href = urljoin(base_tag["href"], href)
-            elif not href.startswith("http"):
-                href = urljoin(CLERK_BASE, href)
-            link = href
-            break
+            link = href if href.startswith("http") else urljoin(base_url, href)
 
     return {
         "doc_num":  doc_num,
-        "doc_type": dtype or doc_type,
+        "doc_type": doc_type.upper().strip(),
         "filed":    _norm_date(filed),
         "grantor":  grantor,
         "grantee":  grantee,
@@ -471,25 +603,6 @@ def _extract_row(cells: list, col: dict, doc_type: str, base_tag) -> Optional[di
         "legal":    legal,
         "clerk_url":link,
     }
-
-
-def _extract_card(item, doc_type: str) -> Optional[dict]:
-    text = item.get_text(" ", strip=True)
-    link = ""
-    a = item.find("a", href=True)
-    if a:
-        link = urljoin(CLERK_BASE, a["href"])
-
-    return {
-        "doc_num":  _re_find(r"(?:Instr|Doc|CF)#?\s*([\w-]+)", text),
-        "doc_type": doc_type,
-        "filed":    _norm_date(_re_find(r"(\d{1,2}/\d{1,2}/\d{4})", text)),
-        "grantor":  _re_find(r"Grantor[:\s]+([^\n;]+)", text),
-        "grantee":  _re_find(r"Grantee[:\s]+([^\n;]+)", text),
-        "amount":   _parse_amount(_re_find(r"\$[\d,\.]+", text)),
-        "legal":    _re_find(r"Legal[:\s]+([^\n;]{5,})", text),
-        "clerk_url":link,
-    } if _re_find(r"(?:Instr|Doc|CF)#?\s*([\w-]+)", text) else None
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
