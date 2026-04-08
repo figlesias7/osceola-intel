@@ -1,7 +1,10 @@
 {
-  "fetched_at": null,
-  "source": "Osceola County Clerk of Courts – Official Records",
-  "date_range": {"from": null, "to": null},
+  "fetched_at": "2026-04-08T10:19:11.757428",
+  "source": "Osceola County Clerk of Courts \u2013 Official Records",
+  "date_range": {
+    "from": "04/01/2026",
+    "to": "04/08/2026"
+  },
   "total": 0,
   "with_address": 0,
   "records": []
