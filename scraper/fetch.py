@@ -44,8 +44,8 @@ GHL_CSV_PATH = Path("data/ghl_export.csv")
 DOC_TYPES = {
     "LP":      ("foreclosure",  "Lis Pendens"),
     "NOFC":    ("foreclosure",  "Notice of Foreclosure"),
-    "TAX": ("tax",          "Tax Deed"),
-    "JUDG":     ("judgment",     "Judgment"),
+    "TAXDEED": ("tax",          "Tax Deed"),
+    "JUD":     ("judgment",     "Judgment"),
     "CCJ":     ("judgment",     "Certified Judgment"),
     "DRJUD":   ("judgment",     "Domestic Judgment"),
     "LNCORPTX":("lien",        "Corp Tax Lien"),
