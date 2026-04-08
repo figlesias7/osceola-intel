@@ -59,7 +59,7 @@ API_URL    = "https://officialrecords.osceolaclerk.org/browserview/api/search"
 BROWSE_URL = "https://officialrecords.osceolaclerk.org/browserview/"
 DOC_URL    = "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber={}"
 
-LOOKBACK     = int(os.getenv("LOOKBACK_DAYS", "7"))
+LOOKBACK     = int(os.getenv("LOOKBACK_DAYS", "30"))
 OUTPUT_PATHS = [Path("dashboard/records.json"), Path("data/records.json")]
 GHL_CSV_PATH = Path("data/ghl_export.csv")
 
@@ -245,7 +245,7 @@ class OsceolaAPI:
         filed    = _norm_date(row.get("rec_date", ""))
         grantor  = str(row.get("party_name") or "").strip()
         grantee  = str(row.get("cross_party_name") or "").strip()
-        legal    = str(row.get("legal_1") or "").strip()
+        legal    = str(row.get("legal_1") or row.get("legal_2") or "").strip()
         # consid_1 may or may not be present in this endpoint
         amount   = _parse_amount(row.get("consid_1") or row.get("amount") or 0)
 
@@ -626,27 +626,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # DEBUG probe – runs first so we can see raw API behaviour
-    log.info("=== DEBUG: raw API probe ===")
-    _sess = requests.Session()
-    _sess.headers.update(SESSION_HEADERS)
-    _sess.get(BROWSE_URL, timeout=20)
-    _today = datetime.now()
-    for _days, _codes in [(7,"LP"),(30,"LP"),(7,"LP,NOFC,LN,JUD,LNHOA,NOC")]:
-        _fr = (_today - timedelta(days=_days)).strftime("%Y%m%d")
-        _to = _today.strftime("%Y%m%d")
-        _r  = _sess.post(API_URL, json={
-            "Party":"","DocTypes":_codes,
-            "FromDate":_fr,"ToDate":_to,
-            "MaxRows":500,"RowsPerPage":500,"StartRow":0,
-        }, timeout=30)
-        _data  = _r.json() if _r.ok else []
-        _total = _data[0].get("_total_rows","?") if _data else 0
-        log.info("  %dd [%-28s] HTTP %d  returned=%d  _total=%s",
-                 _days, _codes, _r.status_code, len(_data), _total)
-        if _data:
-            _first = {k:v for k,v in list(_data[0].items())
-                      if not k.startswith("_head") and k != "_headers"}
-            log.info("    sample: %s", _first)
-    log.info("=== END DEBUG ===")
     main()
