@@ -1,0 +1,78 @@
+name: Scrape Osceola Motivated Seller Leads
+
+on:
+  schedule:
+    - cron: "0 7 * * *"   # 07:00 UTC daily (3 AM EST)
+  workflow_dispatch:        # manual trigger
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+
+    steps:
+      # ── checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── python ────────────────────────────────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # ── dependencies ──────────────────────────────────────────────────────
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install requests beautifulsoup4 lxml dbfread playwright
+
+      - name: Install Playwright browsers
+        run: python -m playwright install --with-deps chromium
+
+      # ── run scraper ───────────────────────────────────────────────────────
+      - name: Run scraper
+        env:
+          LOOKBACK_DAYS: "7"
+        run: python scraper/fetch.py
+
+      # ── commit results ────────────────────────────────────────────────────
+      - name: Commit updated records
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dashboard/records.json data/records.json data/ghl_export.csv || true
+          git diff --staged --quiet || git commit -m "chore: update records $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          git push
+
+  # ── deploy dashboard ──────────────────────────────────────────────────────
+  deploy:
+    needs: scrape
+    runs-on: ubuntu-22.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main          # pick up the freshly committed records.json
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload dashboard artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dashboard/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
