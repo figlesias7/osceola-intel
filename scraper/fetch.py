@@ -32,7 +32,7 @@ logging.basicConfig(
 log = logging.getLogger("fetch")
 
 # ── constants ─────────────────────────────────────────────────────────────────
-CLERK_BASE   = "https://osceolaclerk.com/records-center/"
+CLERK_BASE   = "https://officialrecords.osceolaclerk.org/browserview/"
 LOOKBACK     = int(os.getenv("LOOKBACK_DAYS", "7"))
 OUTPUT_PATHS = [
     Path("dashboard/records.json"),
