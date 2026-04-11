@@ -245,6 +245,13 @@ class OsceolaAPI:
         file_num = str(row.get("file_num") or "").strip()
         if not file_num:
             return None
+        # Skip rows that look like header/metadata rows
+        if file_num.lower() in ("file_num", "instrument", "instr#", "doc #", "number"):
+            return None
+        # Skip rows with no doc_type or obviously non-document data
+        doc_type_raw = str(row.get("doc_type") or "").strip()
+        if doc_type_raw.lower() in ("doc_type", "type", "document type"):
+            return None
 
         doc_type = str(row.get("doc_type") or "").upper().strip()
         filed    = _norm_date(row.get("rec_date", ""))
