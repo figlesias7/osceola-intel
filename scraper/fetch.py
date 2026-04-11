@@ -521,6 +521,30 @@ def compute_flags_and_score(rec: dict,
 
 
 # ── enrich ────────────────────────────────────────────────────────────────────
+FORECLOSURE_LIKE_DOCS = {
+    "LP", "NOFC", "LN", "LNHOA", "LNMECH", "LNCORPTX",
+    "LNIRS", "LNFED", "MEDLN", "TAXDEED"
+}
+
+def _unique_names(*names: str) -> list[str]:
+    out = []
+    seen = set()
+    for name in names:
+        n = (name or "").strip()
+        key = n.upper()
+        if not n or key in seen:
+            continue
+        seen.add(key)
+        out.append(n)
+    return out
+
+def _lookup_candidates(doc_type: str, grantor: str, grantee: str) -> list[str]:
+    # For foreclosure and lien style records, the actual homeowner is often
+    # on the grantee/cross-party side, so try that first.
+    if doc_type in FORECLOSURE_LIKE_DOCS:
+        return _unique_names(grantee, grantor)
+    return _unique_names(grantor, grantee)
+
 def enrich(raw: list[dict], parcel: ParcelLookup,
            today: datetime) -> list[dict]:
     out = []
@@ -528,30 +552,45 @@ def enrich(raw: list[dict], parcel: ParcelLookup,
         try:
             dt       = r.get("doc_type", "").upper()
             cat, lbl = DOC_TYPES.get(dt, ("other", dt))
-            owner    = r.get("grantor", "")
-            p        = parcel.lookup(owner) if owner else {}
+            grantor  = (r.get("grantor") or "").strip()
+            grantee  = (r.get("grantee") or "").strip()
+
+            p = {}
+            lookup_name = ""
+            for candidate in _lookup_candidates(dt, grantor, grantee):
+                p = parcel.lookup(candidate)
+                if p.get("prop_address") or p.get("mail_address"):
+                    lookup_name = candidate
+                    break
+
+            owner = (
+                grantee if dt in FORECLOSURE_LIKE_DOCS and grantee
+                else grantor or grantee
+            )
 
             rec = {
-                "doc_num":     r.get("doc_num", ""),
-                "doc_type":    dt,
-                "filed":       r.get("filed", ""),
-                "cat":         cat,
-                "cat_label":   lbl,
-                "owner":       owner,
-                "grantee":     r.get("grantee", ""),
-                "amount":      r.get("amount", 0),
-                "legal":       r.get("legal", ""),
-                "prop_address":p.get("prop_address", ""),
-                "prop_city":   p.get("prop_city", ""),
-                "prop_state":  p.get("prop_state", "FL"),
-                "prop_zip":    p.get("prop_zip", ""),
-                "mail_address":p.get("mail_address", ""),
-                "mail_city":   p.get("mail_city", ""),
-                "mail_state":  p.get("mail_state", "FL"),
-                "mail_zip":    p.get("mail_zip", ""),
-                "clerk_url":   r.get("clerk_url", ""),
-                "flags":       [],
-                "score":       0,
+                "doc_num":      r.get("doc_num", ""),
+                "doc_type":     dt,
+                "filed":        r.get("filed", ""),
+                "cat":          cat,
+                "cat_label":    lbl,
+                "owner":        owner,
+                "grantor":      grantor,
+                "grantee":      grantee,
+                "lookup_name":  lookup_name,
+                "amount":       r.get("amount", 0),
+                "legal":        r.get("legal", ""),
+                "prop_address": p.get("prop_address", ""),
+                "prop_city":    p.get("prop_city", ""),
+                "prop_state":   p.get("prop_state", "FL"),
+                "prop_zip":     p.get("prop_zip", ""),
+                "mail_address": p.get("mail_address", ""),
+                "mail_city":    p.get("mail_city", ""),
+                "mail_state":   p.get("mail_state", "FL"),
+                "mail_zip":     p.get("mail_zip", ""),
+                "clerk_url":    r.get("clerk_url", ""),
+                "flags":        [],
+                "score":        0,
             }
             rec["flags"], rec["score"] = compute_flags_and_score(rec, today)
             out.append(rec)
