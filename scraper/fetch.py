@@ -55,14 +55,7 @@ BROWSE_URL = "https://officialrecords.osceolaclerk.org/browserview/"
 DOC_URL    = "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber={}"
 DOC_DETAIL = "https://officialrecords.osceolaclerk.org/browserview/api/document/{}"
 
-# Osceola PA ArcGIS REST API (free, no auth required)
-# Layer 0 = Parcels with owner name, site address, mail address
-PA_ARCGIS  = (
-    "https://services.arcgis.com/Ug5xGQbHsD8zuZzM/arcgis/rest/services"
-    "/Osceola_County_Parcels/FeatureServer/0/query"
-)
-# Fallback: PA property search portal
-PA_SEARCH  = "https://maps.property-appraiser.org/mapweb/find.aspx"
+
 
 LOOKBACK     = int(os.getenv("LOOKBACK_DAYS", "30"))
 OUTPUT_PATHS = [Path("dashboard/records.json"), Path("data/records.json")]
@@ -328,170 +321,123 @@ def scrape_clerk(doc_types: list[str],
     return records
 
 
-# ── Property Appraiser lookup via ArcGIS REST API ────────────────────────────
-# The Osceola PA bulk DBF costs $250 — not a free download.
-# Instead we use:
-#   1. The PA's ArcGIS FeatureServer (free, no auth, query by owner name)
-#   2. The clerk document detail API for amount/consideration
+# ── Property Appraiser address lookup ────────────────────────────────────────
+# ira.property-appraiser.org does NOT resolve from GitHub Actions.
+# The bulk DBF costs $250. No free programmatic API is available externally.
 #
-# ArcGIS query by owner name:
-#   GET PA_ARCGIS?where=OWNER_NAME+LIKE+'%25TORRES%25'
-#                &outFields=OWNER_NAME,SITE_ADDR,SITE_CITY,SITE_ZIP,
-#                           MAIL_ADDR,MAIL_CITY,MAIL_STATE,MAIL_ZIP
-#                &f=json
-#
-# We cache results in memory so the same owner is only looked up once.
+# Best available approach from GitHub Actions:
+#   1. Search search.property-appraiser.org by owner name (public web form)
+#   2. Parse the HTML response for site/mailing address
+# Results cached in memory so each owner is only fetched once.
+
+PA_SEARCH_BASE = "https://search.property-appraiser.org"
 
 class ParcelLookup:
-    """Look up property + mailing address from Osceola PA ArcGIS REST API."""
-
-    # Confirmed Osceola PA ArcGIS server: ira.property-appraiser.org
-    # Layer 0 = Tax Parcels (updated daily, no auth required)
-    ARCGIS_CANDIDATES = [
-        # Primary: OpenData_LandRecords — confirmed from search results
-        ("https://ira.property-appraiser.org/arcgis/rest/services"
-         "/OCPA/OpenData_LandRecords/MapServer/0/query"),
-        # Fallback: ParcelCentroids service
-        ("https://ira.property-appraiser.org/arcgis/rest/services"
-         "/GisSite_ParcelCentroids/MapServer/0/query"),
-        # Fallback: TaxMap service
-        ("https://ira.property-appraiser.org/arcgis/rest/services"
-         "/GisSite_TaxMap/MapServer/0/query"),
-    ]
-
-    # Fields to request — PA uses these confirmed field names
-    OUTFIELDS = "*"   # request all fields; we parse whatever comes back
+    """Look up property/mailing address from the Osceola PA public search portal."""
 
     def __init__(self):
-        self._cache: dict[str, dict] = {}   # owner_name_upper → parcel dict
-        self._working_url: Optional[str] = None
-        self._api_dead = False
-
-    def _find_api(self) -> Optional[str]:
-        if self._api_dead:
-            return None
-        if self._working_url:
-            return self._working_url
-        for url in self.ARCGIS_CANDIDATES:
-            try:
-                r = requests.get(url, params={
-                    "where": "1=1", "outFields": "OBJECTID",
-                    "resultRecordCount": 1, "f": "json"
-                }, timeout=10)
-                if r.status_code == 200 and "features" in r.json():
-                    self._working_url = url
-                    log.info("PA ArcGIS API: %s", url)
-                    return url
-            except Exception:
-                pass
-        log.warning("PA ArcGIS API not reachable – no address enrichment")
-        self._api_dead = True
-        return None
+        self._cache: dict[str, dict] = {}
+        self._session = requests.Session()
+        self._session.headers.update({
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Accept":     "text/html,application/xhtml+xml,*/*",
+            "Referer":    PA_SEARCH_BASE + "/",
+        })
+        self._dead = False
 
     def load(self):
-        """No-op: we look up on demand."""
-        url = self._find_api()
-        if url:
-            log.info("PA ArcGIS API ready for on-demand lookups")
-        else:
-            log.warning("PA ArcGIS API unavailable – addresses will be empty")
+        try:
+            r = self._session.get(PA_SEARCH_BASE + "/", timeout=10)
+            if r.status_code < 400:
+                log.info("PA search reachable")
+                return
+        except Exception as exc:
+            log.debug("PA probe: %s", exc)
+        log.warning("PA property search not reachable – addresses will be empty")
+        self._dead = True
 
     def lookup(self, owner: str) -> dict:
-        if not owner or self._api_dead:
+        if not owner or self._dead:
             return {}
         key = owner.strip().upper()
         if key in self._cache:
             return self._cache[key]
+        result = self._fetch(key)
+        self._cache[key] = result
+        return result
 
-        url = self._find_api()
-        if not url:
-            return {}
-
-        # Build a LIKE query using the first two words of the owner name
-        # (avoids middle-initial mismatches)
-        parts = key.split()
-        search_term = " ".join(parts[:2]) if len(parts) >= 2 else key
-        where = f"OWNER_NAME LIKE '%{search_term}%' OR OWN1 LIKE '%{search_term}%'"
-
-        try:
-            r = requests.get(url, params={
-                "where":             where,
-                "outFields":         self.OUTFIELDS,
-                "resultRecordCount": 5,
-                "f":                 "json",
-            }, timeout=10)
-            if r.status_code != 200:
-                self._cache[key] = {}
-                return {}
-            data = r.json()
-            features = data.get("features", [])
-            if not features:
-                self._cache[key] = {}
-                return {}
-
-            # Pick the feature whose owner name most closely matches
-            best = self._best_match(key, features)
-            result = self._parse_feature(best)
-            self._cache[key] = result
-            return result
-
-        except Exception as exc:
-            log.debug("PA lookup failed for %s: %s", owner, exc)
-            self._cache[key] = {}
-            return {}
-
-    @staticmethod
-    def _best_match(target: str, features: list) -> dict:
-        """Return the feature whose owner name best matches target."""
-        def score(f):
-            attrs = f.get("attributes", {})
-            name = str(attrs.get("OWNER_NAME") or attrs.get("OWN1") or "").upper()
-            # Count matching words
-            t_words = set(target.split())
-            n_words = set(name.split())
-            return len(t_words & n_words)
-        return max(features, key=score)
-
-    @staticmethod
-    def _parse_feature(feature: dict) -> dict:
-        a = feature.get("attributes", {})
-        # Normalise all keys to uppercase for consistent lookup
-        au = {k.upper(): (str(v).strip() if v else "") for k, v in a.items()}
-        def g(*keys):
-            for k in keys:
-                v = au.get(k.upper(), "")
-                if v and v.lower() not in ("null", "none"):
-                    return v
-            return ""
-        return {
-            "prop_address": g("SITE_ADDR","SITEADDR","SITE_ADDRESS","PHY_ADDR1",
-                              "PHYADDR","SITUS_ADDR","ADDRESS"),
-            "prop_city":    g("SITE_CITY","SITECITY","PHY_CITY","PHYCITY",
-                              "SITUS_CITY") or "Kissimmee",
-            "prop_state":   "FL",
-            "prop_zip":     g("SITE_ZIP","SITEZIP","PHY_ZIP","PHYZIP","SITUS_ZIP"),
-            "mail_address": g("MAIL_ADDR","MAILADR1","MAIL_ADDRESS","MAILING_ADDR",
-                              "OWN_ADDR","OWNADDR","ADDR1"),
-            "mail_city":    g("MAIL_CITY","MAILCITY","MAILING_CITY","OWN_CITY",
-                              "OWNCITY"),
-            "mail_state":   g("MAIL_STATE","MAILSTATE","MAILING_STATE","OWN_STATE",
-                              "OWNSTATE") or "FL",
-            "mail_zip":     g("MAIL_ZIP","MAILZIP","MAILING_ZIP","OWN_ZIP",
-                              "OWNZIP","ZIPCODE","ZIP"),
-        }
+    def _fetch(self, owner: str) -> dict:
+        parts = owner.split()
+        query = " ".join(parts[:2]) if len(parts) >= 2 else owner
+        for url, params in [
+            (PA_SEARCH_BASE + "/",                  {"name": query, "searchType": "name"}),
+            (PA_SEARCH_BASE + "/search",             {"name": query}),
+            (PA_SEARCH_BASE + "/Home/Results",       {"name": query, "type": "owner"}),
+            (PA_SEARCH_BASE + "/Home/Search",        {"OwnerName": query}),
+        ]:
+            try:
+                r = self._session.get(url, params=params, timeout=12)
+                if r.status_code != 200:
+                    continue
+                result = _parse_pa_html(r.text)
+                if result.get("prop_address") or result.get("mail_address"):
+                    time.sleep(0.1)
+                    return result
+            except Exception as exc:
+                log.debug("PA fetch error %s: %s", owner, exc)
+        return {}
 
 
-# ── Clerk document detail: fetch consideration/amount ────────────────────────
+def _parse_pa_html(html: str) -> dict:
+    """Parse site/mailing addresses from PA search result HTML."""
+    from bs4 import BeautifulSoup as _BS
+    import re as _re
+    soup = _BS(html, "lxml")
+    out = {
+        "prop_address": "", "prop_city": "", "prop_state": "FL", "prop_zip": "",
+        "mail_address": "", "mail_city": "", "mail_state": "FL", "mail_zip": "",
+    }
+    # Structured table cells
+    for td in soup.find_all("td"):
+        label = td.get_text(strip=True).lower()
+        nxt   = td.find_next_sibling("td")
+        if not nxt:
+            continue
+        val = nxt.get_text(strip=True)
+        if not val or len(val) < 3:
+            continue
+        if any(k in label for k in ("site addr", "physical addr", "property addr", "situs")):
+            out["prop_address"] = val
+        elif "mail" in label and "addr" in label:
+            out["mail_address"] = val
+        elif any(k in label for k in ("site city", "property city")):
+            out["prop_city"] = val
+        elif "mail" in label and "city" in label:
+            out["mail_city"] = val
+        elif "mail" in label and "state" in label:
+            out["mail_state"] = val
+        elif any(k in label for k in ("site zip", "property zip")):
+            out["prop_zip"] = val
+        elif "mail" in label and "zip" in label:
+            out["mail_zip"] = val
+    # Fallback: regex on plain text
+    if not out["prop_address"]:
+        text = soup.get_text(" ", strip=True)
+        m = _re.search(
+            r"(?:Site|Physical|Property|Situs)\s+Addr(?:ess)?[:\s]+([A-Z0-9][^,\n]{4,40})",
+            text, _re.IGNORECASE
+        )
+        if m:
+            out["prop_address"] = m.group(1).strip()
+    return out
+
+
+# ── Clerk: fetch amount by re-searching with instrument number ────────────────
 def fetch_amounts(records: list[dict], session: requests.Session) -> None:
     """
-    For each record missing an amount, fetch the document detail page
-    from the clerk API to get the consideration/amount field.
-    Modifies records in-place.
-
-    Confirmed detail endpoint:
-      GET /browserview/api/document/{doc_id}
-    We stored doc_id in the raw row; if not available we skip.
-    Amount is in field: consid_1
+    The bulk search API omits consid_1. Re-search each doc by its instrument
+    number as the Party field — this returns the full record including consid_1.
     """
     missing = [r for r in records if not r.get("amount")]
     if not missing:
@@ -502,35 +448,29 @@ def fetch_amounts(records: list[dict], session: requests.Session) -> None:
         doc_num = r.get("doc_num", "")
         if not doc_num:
             continue
-        # NewVision document detail endpoints to try in order
-        endpoints = [
-            f"{BROWSE_URL}api/document/{doc_num}",
-            f"{BROWSE_URL}api/DocumentDetail/{doc_num}",
-            f"{BROWSE_URL}api/getDocument?instrumentNumber={doc_num}",
-        ]
-        for url in endpoints:
-            try:
-                resp = session.get(url, timeout=10)
-                if resp.status_code != 200:
-                    continue
-                ct = resp.headers.get("content-type","")
-                if "json" not in ct:
-                    continue
-                data = resp.json()
-                if isinstance(data, list) and data:
-                    data = data[0]
-                if isinstance(data, dict):
-                    amount = _parse_amount(
-                        data.get("consid_1") or data.get("consid1") or
-                        data.get("consideration") or data.get("Consideration") or
-                        data.get("amount") or data.get("Amount") or 0
-                    )
-                    if amount:
-                        r["amount"] = amount
-                        fetched += 1
+        try:
+            resp = session.post(API_URL, json={
+                "Party":      doc_num,
+                "DocTypes":   r.get("doc_type", ""),
+                "FromDate":   "",
+                "ToDate":     "",
+                "MaxRows":    5,
+                "RowsPerPage":5,
+                "StartRow":   0,
+            }, timeout=15)
+            if resp.status_code == 200:
+                rows = resp.json() if isinstance(resp.json(), list) else []
+                for row in rows:
+                    if str(row.get("file_num", "")) == doc_num:
+                        amt = _parse_amount(
+                            row.get("consid_1") or row.get("consid_2") or 0
+                        )
+                        if amt:
+                            r["amount"] = amt
+                            fetched += 1
                         break
-            except Exception as exc:
-                log.debug("Amount fetch %s %s: %s", url, doc_num, exc)
+        except Exception as exc:
+            log.debug("Amount fetch %s: %s", doc_num, exc)
         time.sleep(0.05)
     log.info("Amounts fetched: %d / %d", fetched, len(missing))
 
