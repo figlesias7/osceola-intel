@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-11T05:55:28.560702",
+  "fetched_at": "2026-04-11T05:59:27.787298",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
     "from": "03/12/2026",
@@ -14,8 +14,10 @@
       "filed": "2026-04-09",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "FLORIDA DEPARTMENT OF TRANSPORTATION",
+      "owner": "JOHNSTON DAVID J",
+      "grantor": "FLORIDA DEPARTMENT OF TRANSPORTATION",
       "grantee": "JOHNSTON DAVID J",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "POMERANCE PARK UNIT TWO",
       "prop_address": "",
@@ -40,8 +42,10 @@
       "filed": "2026-04-09",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "STOREY CREEK HOMEOWNERS ASSOCIATION INC",
+      "owner": "WALCOTT RYAN TYRELL",
+      "grantor": "STOREY CREEK HOMEOWNERS ASSOCIATION INC",
       "grantee": "WALCOTT RYAN TYRELL",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "STOREY CREEK PHASE 5",
       "prop_address": "",
@@ -56,7 +60,6 @@
       "flags": [
         "Lis pendens",
         "Pre-foreclosure",
-        "LLC / corp owner",
         "New this week"
       ],
       "score": 75
@@ -67,8 +70,10 @@
       "filed": "2026-04-09",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "U S BANK TRUST COMPANY NATIONAL ASSOCIATION TR",
+      "owner": "TURNER KEVIN MITCHEL",
+      "grantor": "U S BANK TRUST COMPANY NATIONAL ASSOCIATION TR",
       "grantee": "TURNER KEVIN MITCHEL",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "WINDSOR AT WESTSIDE - PHASE 2B",
       "prop_address": "",
@@ -83,7 +88,6 @@
       "flags": [
         "Lis pendens",
         "Pre-foreclosure",
-        "LLC / corp owner",
         "New this week"
       ],
       "score": 75
@@ -94,8 +98,10 @@
       "filed": "2026-03-26",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "VISTAS AT CHAMPIONSGATE MASTER COMMUNITY ASSOCIATION INC",
+      "owner": "ALBIZU MICHELLE M",
+      "grantor": "VISTAS AT CHAMPIONSGATE MASTER COMMUNITY ASSOCIATION INC",
       "grantee": "ALBIZU MICHELLE M",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "VISTAS AT CHAMPIONSGATE PHASE 1B & 2, THE",
       "prop_address": "",
@@ -109,8 +115,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026039996",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -120,8 +125,10 @@
       "filed": "2026-03-13",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "CYPRESS HAMMOCK HOMEOWNERS ASSOCIATION INC",
+      "owner": "ALLYSON ALJURE LIVING TRUST",
+      "grantor": "CYPRESS HAMMOCK HOMEOWNERS ASSOCIATION INC",
       "grantee": "ALLYSON ALJURE LIVING TRUST",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "CYPRESS HAMMOCK PHASE 1",
       "prop_address": "",
@@ -146,8 +153,10 @@
       "filed": "2026-03-18",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "ANTHEM PARK TOWNHOMES HOMEOWNERS ASSOCIATION INC",
+      "owner": "GONZALEZ PINERO CARLOS ALBERTO",
+      "grantor": "ANTHEM PARK TOWNHOMES HOMEOWNERS ASSOCIATION INC",
       "grantee": "GONZALEZ PINERO CARLOS ALBERTO",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "ANTHEM PARK TRACT M REPLAT",
       "prop_address": "",
@@ -161,8 +170,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026036249",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -172,8 +180,10 @@
       "filed": "2026-03-20",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "VERANDA PALMS HOMEOWNERS ASSOCIATION INC",
+      "owner": "BERENTSEN FRODE",
+      "grantor": "VERANDA PALMS HOMEOWNERS ASSOCIATION INC",
       "grantee": "BERENTSEN FRODE",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "VERANDA PALMS PHASE 1B",
       "prop_address": "",
@@ -187,8 +197,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026036952",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -198,8 +207,10 @@
       "filed": "2026-03-24",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "BLACKSTONE HOMEOWNERS ASSOCIATION INC",
+      "owner": "ERNIE PLAZA II",
+      "grantor": "BLACKSTONE HOMEOWNERS ASSOCIATION INC",
       "grantee": "ERNIE PLAZA II",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "BLACKSTONE",
       "prop_address": "",
@@ -213,8 +224,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026038223",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -224,8 +234,10 @@
       "filed": "2026-03-24",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "CHAMPIONSGATE CONDOMINIUM NO 2 ASSOCIATION INC",
+      "owner": "CAICEDO FELIPE AFANADOR",
+      "grantor": "CHAMPIONSGATE CONDOMINIUM NO 2 ASSOCIATION INC",
       "grantee": "CAICEDO FELIPE AFANADOR",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "CHAMPIONSGATE A CONDOMINIUM PHASE 10",
       "prop_address": "",
@@ -239,8 +251,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026038490",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -250,8 +261,10 @@
       "filed": "2026-03-16",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "CHAMPIONS POINTE AT CHAMPIONGATE COMMUNITY ASSOCIATION INC",
+      "owner": "CAMPOS MARIO VALENTIN URGILES",
+      "grantor": "CHAMPIONS POINTE AT CHAMPIONGATE COMMUNITY ASSOCIATION INC",
       "grantee": "CAMPOS MARIO VALENTIN URGILES",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "TRACT X",
       "prop_address": "",
@@ -265,8 +278,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026034217",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -276,8 +288,10 @@
       "filed": "2026-03-17",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "CHAMPIONS POINTE AT CHAMPIONSGATE COMMUNITY ASSOCIATION INC",
+      "owner": "CRISA HOLDING LLC",
+      "grantor": "CHAMPIONS POINTE AT CHAMPIONSGATE COMMUNITY ASSOCIATION INC",
       "grantee": "CRISA HOLDING LLC",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "FOX NORTH",
       "prop_address": "",
@@ -302,8 +316,10 @@
       "filed": "2026-03-24",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "CHAMPIONSGATE CONDOMINIUM NO 2 ASSOCIATION INC",
+      "owner": "VM DAVENPSORT INVESTMENTS LLC",
+      "grantor": "CHAMPIONSGATE CONDOMINIUM NO 2 ASSOCIATION INC",
       "grantee": "VM DAVENPSORT INVESTMENTS LLC",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "CHAMPIONSGATE A CONDOMINIUM PHASE 6",
       "prop_address": "",
@@ -328,8 +344,10 @@
       "filed": "2026-03-13",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "COVE RESORT AT STOREY LAKE COMMUNITY ASSOCIATION INC",
+      "owner": "YM FIGUEIREDO LLC",
+      "grantor": "COVE RESORT AT STOREY LAKE COMMUNITY ASSOCIATION INC",
       "grantee": "YM FIGUEIREDO LLC",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "COVE AT STOREY LAKE V",
       "prop_address": "",
@@ -354,8 +372,10 @@
       "filed": "2026-03-12",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "CYPRESS HAMMOCK HOMEOWNERS ASSOCIATION INC",
+      "owner": "PEREZ CRYSTAL",
+      "grantor": "CYPRESS HAMMOCK HOMEOWNERS ASSOCIATION INC",
       "grantee": "PEREZ CRYSTAL",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "CYPRESS HAMMOCK PHASE 1",
       "prop_address": "",
@@ -369,8 +389,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026032552",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -380,8 +399,10 @@
       "filed": "2026-03-12",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "CYPRESS HAMMOCK HOMEOWNERS ASSOCIATION INC",
+      "owner": "PEREZ KENNY FABIAN",
+      "grantor": "CYPRESS HAMMOCK HOMEOWNERS ASSOCIATION INC",
       "grantee": "PEREZ KENNY FABIAN",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "CYPRESS HAMMOCK PHASE 2",
       "prop_address": "",
@@ -395,8 +416,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026032562",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -406,8 +426,10 @@
       "filed": "2026-03-24",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "STEPPING STONE COMMUNITY ASSOCIATION INC",
+      "owner": "DOUGLAS LIONEL A JR",
+      "grantor": "STEPPING STONE COMMUNITY ASSOCIATION INC",
       "grantee": "DOUGLAS LIONEL A JR",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "STEPPING STONE POD A - PHASE 2",
       "prop_address": "",
@@ -421,8 +443,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026038488",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -432,8 +453,10 @@
       "filed": "2026-03-16",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "EAST LAKE COVE HOMEOWNERS ASSOCIATION INC",
+      "owner": "QUICENO MARIA DEL PILAR",
+      "grantor": "EAST LAKE COVE HOMEOWNERS ASSOCIATION INC",
       "grantee": "QUICENO MARIA DEL PILAR",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "EAST LAKE COVE PHASE 2",
       "prop_address": "",
@@ -447,8 +470,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026034226",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -458,8 +480,10 @@
       "filed": "2026-03-19",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "STEPPING STONE COMMUNITY ASSOCIATION INC",
+      "owner": "FLOREZ YEINSON CUELLAR",
+      "grantor": "STEPPING STONE COMMUNITY ASSOCIATION INC",
       "grantee": "FLOREZ YEINSON CUELLAR",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "STEPPING STONE POD A - PHASE 2",
       "prop_address": "",
@@ -473,8 +497,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026036603",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -484,8 +507,10 @@
       "filed": "2026-03-27",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "THOMPSON ROBERT W",
+      "owner": "HOLDER ROBERT",
+      "grantor": "THOMPSON ROBERT W",
       "grantee": "HOLDER ROBERT",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "VILLAS AT SHADOW BAY, THE",
       "prop_address": "",
@@ -509,8 +534,10 @@
       "filed": "2026-03-27",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "THOMPSON ROBERT W",
+      "owner": "HOLDER ROBERT",
+      "grantor": "THOMPSON ROBERT W",
       "grantee": "HOLDER ROBERT",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "FOXHALL A CONDOMINIUM PHASE IV",
       "prop_address": "",
@@ -534,8 +561,10 @@
       "filed": "2026-03-27",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "THOMPSON ROBERT W",
+      "owner": "HOLDER ROBERT",
+      "grantor": "THOMPSON ROBERT W",
       "grantee": "HOLDER ROBERT",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "SARATOGA PARK PHASE 3A",
       "prop_address": "",
@@ -559,8 +588,10 @@
       "filed": "2026-03-27",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "WATCHTOWER BIBLE AND TRACT SOCIETY OF NEW YORK INC",
+      "owner": "THOMPSON ROBERT W",
+      "grantor": "WATCHTOWER BIBLE AND TRACT SOCIETY OF NEW YORK INC",
       "grantee": "THOMPSON ROBERT W",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "VILLAS AT SHADOW BAY, THE",
       "prop_address": "",
@@ -574,8 +605,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026040751",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -585,8 +615,10 @@
       "filed": "2026-03-24",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "VISTAS AT CHAMPIONSGATE MASTER COMMUNITY ASSOCIATION INC",
+      "owner": "ONEAL DAVID",
+      "grantor": "VISTAS AT CHAMPIONSGATE MASTER COMMUNITY ASSOCIATION INC",
       "grantee": "ONEAL DAVID",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "VISTAS AT CHAMPIONSGATE PHASE 1B & 2, THE",
       "prop_address": "",
@@ -600,8 +632,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026038481",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -611,8 +642,10 @@
       "filed": "2026-03-26",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "OCEAN 14 LIMITED",
+      "owner": "RUESCH VICTORIA",
+      "grantor": "OCEAN 14 LIMITED",
       "grantee": "RUESCH VICTORIA",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "",
       "prop_address": "",
@@ -636,8 +669,10 @@
       "filed": "2026-03-26",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "OCEAN 14 LIMITED",
+      "owner": "RUESCH VICTORIA",
+      "grantor": "OCEAN 14 LIMITED",
       "grantee": "RUESCH VICTORIA",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "SLIC 07-26-31",
       "prop_address": "",
@@ -661,8 +696,10 @@
       "filed": "2026-03-26",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "STEPPING STONE COMMUNITY ASSOCIATION INC",
+      "owner": "YOUNG KIANA ALEXIS",
+      "grantor": "STEPPING STONE COMMUNITY ASSOCIATION INC",
       "grantee": "YOUNG KIANA ALEXIS",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "STEPPING STONE POD A - PHASE 1",
       "prop_address": "",
@@ -676,8 +713,7 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026040013",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "LLC / corp owner"
+        "Pre-foreclosure"
       ],
       "score": 70
     },
@@ -688,7 +724,9 @@
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
       "owner": "TORRES JESUS M",
+      "grantor": "TORRES JESUS M",
       "grantee": "",
+      "lookup_name": "",
       "amount": 0.0,
       "legal": "",
       "prop_address": "",
