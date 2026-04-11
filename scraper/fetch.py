@@ -338,26 +338,22 @@ def scrape_clerk(doc_types: list[str],
 class ParcelLookup:
     """Look up property + mailing address from Osceola PA ArcGIS REST API."""
 
-    # Known working ArcGIS endpoints for Osceola parcels (try in order)
+    # Confirmed Osceola PA ArcGIS server: ira.property-appraiser.org
+    # Layer 0 = Tax Parcels (updated daily, no auth required)
     ARCGIS_CANDIDATES = [
-        ("https://services.arcgis.com/Ug5xGQbHsD8zuZzM/arcgis/rest/services"
-         "/Osceola_County_Parcels/FeatureServer/0/query"),
-        ("https://ocpagis.maps.arcgis.com/sharing/rest/content/items"
-         "/parcels/FeatureServer/0/query"),
-        ("https://maps.property-appraiser.org/arcgis/rest/services"
-         "/Parcels/MapServer/0/query"),
+        # Primary: OpenData_LandRecords — confirmed from search results
+        ("https://ira.property-appraiser.org/arcgis/rest/services"
+         "/OCPA/OpenData_LandRecords/MapServer/0/query"),
+        # Fallback: ParcelCentroids service
+        ("https://ira.property-appraiser.org/arcgis/rest/services"
+         "/GisSite_ParcelCentroids/MapServer/0/query"),
+        # Fallback: TaxMap service
+        ("https://ira.property-appraiser.org/arcgis/rest/services"
+         "/GisSite_TaxMap/MapServer/0/query"),
     ]
 
-    OUTFIELDS = (
-        "OWNER_NAME,OWN1,OWNERNAME,"
-        "SITE_ADDR,SITEADDR,SITE_ADDRESS,"
-        "SITE_CITY,SITECITY,"
-        "SITE_ZIP,SITEZIP,"
-        "MAIL_ADDR,MAILADR1,MAIL_ADDRESS,"
-        "MAIL_CITY,MAILCITY,"
-        "MAIL_STATE,MAILSTATE,"
-        "MAIL_ZIP,MAILZIP,ZIPCODE"
-    )
+    # Fields to request — PA uses these confirmed field names
+    OUTFIELDS = "*"   # request all fields; we parse whatever comes back
 
     def __init__(self):
         self._cache: dict[str, dict] = {}   # owner_name_upper → parcel dict
@@ -452,21 +448,29 @@ class ParcelLookup:
     @staticmethod
     def _parse_feature(feature: dict) -> dict:
         a = feature.get("attributes", {})
+        # Normalise all keys to uppercase for consistent lookup
+        au = {k.upper(): (str(v).strip() if v else "") for k, v in a.items()}
         def g(*keys):
             for k in keys:
-                v = a.get(k) or a.get(k.upper()) or a.get(k.lower()) or ""
-                if v:
-                    return str(v).strip()
+                v = au.get(k.upper(), "")
+                if v and v.lower() not in ("null", "none"):
+                    return v
             return ""
         return {
-            "prop_address": g("SITE_ADDR","SITEADDR","SITE_ADDRESS"),
-            "prop_city":    g("SITE_CITY","SITECITY") or "Kissimmee",
+            "prop_address": g("SITE_ADDR","SITEADDR","SITE_ADDRESS","PHY_ADDR1",
+                              "PHYADDR","SITUS_ADDR","ADDRESS"),
+            "prop_city":    g("SITE_CITY","SITECITY","PHY_CITY","PHYCITY",
+                              "SITUS_CITY") or "Kissimmee",
             "prop_state":   "FL",
-            "prop_zip":     g("SITE_ZIP","SITEZIP"),
-            "mail_address": g("MAIL_ADDR","MAILADR1","MAIL_ADDRESS"),
-            "mail_city":    g("MAIL_CITY","MAILCITY"),
-            "mail_state":   g("MAIL_STATE","MAILSTATE") or "FL",
-            "mail_zip":     g("MAIL_ZIP","MAILZIP","ZIPCODE"),
+            "prop_zip":     g("SITE_ZIP","SITEZIP","PHY_ZIP","PHYZIP","SITUS_ZIP"),
+            "mail_address": g("MAIL_ADDR","MAILADR1","MAIL_ADDRESS","MAILING_ADDR",
+                              "OWN_ADDR","OWNADDR","ADDR1"),
+            "mail_city":    g("MAIL_CITY","MAILCITY","MAILING_CITY","OWN_CITY",
+                              "OWNCITY"),
+            "mail_state":   g("MAIL_STATE","MAILSTATE","MAILING_STATE","OWN_STATE",
+                              "OWNSTATE") or "FL",
+            "mail_zip":     g("MAIL_ZIP","MAILZIP","MAILING_ZIP","OWN_ZIP",
+                              "OWNZIP","ZIPCODE","ZIP"),
         }
 
 
@@ -491,27 +495,36 @@ def fetch_amounts(records: list[dict], session: requests.Session) -> None:
         doc_num = r.get("doc_num", "")
         if not doc_num:
             continue
-        # Try the document detail endpoint
-        url = f"{BROWSE_URL}api/document/{doc_num}"
-        try:
-            resp = session.get(url, timeout=10)
-            if resp.status_code == 200:
+        # NewVision document detail endpoints to try in order
+        endpoints = [
+            f"{BROWSE_URL}api/document/{doc_num}",
+            f"{BROWSE_URL}api/DocumentDetail/{doc_num}",
+            f"{BROWSE_URL}api/getDocument?instrumentNumber={doc_num}",
+        ]
+        for url in endpoints:
+            try:
+                resp = session.get(url, timeout=10)
+                if resp.status_code != 200:
+                    continue
+                ct = resp.headers.get("content-type","")
+                if "json" not in ct:
+                    continue
                 data = resp.json()
-                # detail may be a dict or list
                 if isinstance(data, list) and data:
                     data = data[0]
                 if isinstance(data, dict):
                     amount = _parse_amount(
-                        data.get("consid_1") or
-                        data.get("consideration") or
-                        data.get("amount") or 0
+                        data.get("consid_1") or data.get("consid1") or
+                        data.get("consideration") or data.get("Consideration") or
+                        data.get("amount") or data.get("Amount") or 0
                     )
                     if amount:
                         r["amount"] = amount
                         fetched += 1
-        except Exception as exc:
-            log.debug("Amount fetch failed %s: %s", doc_num, exc)
-        time.sleep(0.05)   # don't hammer the server
+                        break
+            except Exception as exc:
+                log.debug("Amount fetch %s %s: %s", url, doc_num, exc)
+        time.sleep(0.05)
     log.info("Amounts fetched: %d / %d", fetched, len(missing))
 
 
