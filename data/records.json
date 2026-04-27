@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-04-26T10:05:52.235961",
+  "fetched_at": "2026-04-27T12:11:27.566362",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
-    "from": "03/27/2026",
-    "to": "04/26/2026"
+    "from": "03/28/2026",
+    "to": "04/27/2026"
   },
-  "total": 8,
+  "total": 4,
   "with_address": 0,
   "records": [
     {
@@ -29,114 +29,6 @@
       "mail_state": "FL",
       "mail_zip": "",
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026047737",
-      "flags": [
-        "Lis pendens",
-        "Pre-foreclosure"
-      ],
-      "score": 70
-    },
-    {
-      "doc_num": "2026040748",
-      "doc_type": "LP",
-      "filed": "2026-03-27",
-      "cat": "foreclosure",
-      "cat_label": "Lis Pendens",
-      "owner": "HOLDER ROBERT",
-      "grantor": "THOMPSON ROBERT W",
-      "grantee": "HOLDER ROBERT",
-      "lookup_name": "",
-      "amount": 0.0,
-      "legal": "VILLAS AT SHADOW BAY, THE",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "FL",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "FL",
-      "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026040748",
-      "flags": [
-        "Lis pendens",
-        "Pre-foreclosure"
-      ],
-      "score": 70
-    },
-    {
-      "doc_num": "2026040749",
-      "doc_type": "LP",
-      "filed": "2026-03-27",
-      "cat": "foreclosure",
-      "cat_label": "Lis Pendens",
-      "owner": "HOLDER ROBERT",
-      "grantor": "THOMPSON ROBERT W",
-      "grantee": "HOLDER ROBERT",
-      "lookup_name": "",
-      "amount": 0.0,
-      "legal": "FOXHALL A CONDOMINIUM PHASE IV",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "FL",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "FL",
-      "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026040749",
-      "flags": [
-        "Lis pendens",
-        "Pre-foreclosure"
-      ],
-      "score": 70
-    },
-    {
-      "doc_num": "2026040750",
-      "doc_type": "LP",
-      "filed": "2026-03-27",
-      "cat": "foreclosure",
-      "cat_label": "Lis Pendens",
-      "owner": "HOLDER ROBERT",
-      "grantor": "THOMPSON ROBERT W",
-      "grantee": "HOLDER ROBERT",
-      "lookup_name": "",
-      "amount": 0.0,
-      "legal": "SARATOGA PARK PHASE 3A",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "FL",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "FL",
-      "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026040750",
-      "flags": [
-        "Lis pendens",
-        "Pre-foreclosure"
-      ],
-      "score": 70
-    },
-    {
-      "doc_num": "2026040751",
-      "doc_type": "LP",
-      "filed": "2026-03-27",
-      "cat": "foreclosure",
-      "cat_label": "Lis Pendens",
-      "owner": "THOMPSON ROBERT W",
-      "grantor": "WATCHTOWER BIBLE AND TRACT SOCIETY OF NEW YORK INC",
-      "grantee": "THOMPSON ROBERT W",
-      "lookup_name": "",
-      "amount": 0.0,
-      "legal": "VILLAS AT SHADOW BAY, THE",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "FL",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "FL",
-      "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026040751",
       "flags": [
         "Lis pendens",
         "Pre-foreclosure"
