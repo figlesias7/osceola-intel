@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-05-31T09:40:37.978526",
+  "fetched_at": "2026-06-01T12:27:44.741177",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
-    "from": "05/01/2026",
-    "to": "05/31/2026"
+    "from": "05/02/2026",
+    "to": "06/01/2026"
   },
-  "total": 10,
+  "total": 9,
   "with_address": 0,
   "records": [
     {
@@ -92,33 +92,6 @@
         "New this week"
       ],
       "score": 75
-    },
-    {
-      "doc_num": "2026057749",
-      "doc_type": "LP",
-      "filed": "2026-05-01",
-      "cat": "foreclosure",
-      "cat_label": "Lis Pendens",
-      "owner": "SMITH ROBERT",
-      "grantor": "ADDITION FINANCIAL CREDIT UNION",
-      "grantee": "SMITH ROBERT",
-      "lookup_name": "",
-      "amount": 0.0,
-      "legal": "PLEASANT HILL LAKES (UNIT TWO)",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "FL",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "FL",
-      "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026057749",
-      "flags": [
-        "Lis pendens",
-        "Pre-foreclosure"
-      ],
-      "score": 70
     },
     {
       "doc_num": "2026065153",
