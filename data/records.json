@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-06-10T10:47:08.254554",
+  "fetched_at": "2026-06-11T11:16:29.638250",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
-    "from": "05/11/2026",
-    "to": "06/10/2026"
+    "from": "05/12/2026",
+    "to": "06/11/2026"
   },
   "total": 8,
   "with_address": 0,
@@ -42,12 +42,12 @@
       "filed": "2026-06-09",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "FIRST PARTY",
-      "grantor": "FIRST PARTY",
-      "grantee": "",
+      "owner": "HOMME DUDET PETIT",
+      "grantor": "JOSEPH BERNADETTE",
+      "grantee": "HOMME DUDET PETIT",
       "lookup_name": "",
       "amount": 0.0,
-      "legal": "",
+      "legal": "BUENAVENTURA LAKES UNIT 2",
       "prop_address": "",
       "prop_city": "",
       "prop_state": "FL",
