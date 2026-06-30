@@ -1,13 +1,40 @@
 {
-  "fetched_at": "2026-06-29T11:51:41.663280",
+  "fetched_at": "2026-06-30T10:23:01.714428",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
-    "from": "05/30/2026",
-    "to": "06/29/2026"
+    "from": "05/31/2026",
+    "to": "06/30/2026"
   },
   "total": 4,
   "with_address": 0,
   "records": [
+    {
+      "doc_num": "2026074929",
+      "doc_type": "LP",
+      "filed": "2026-06-08",
+      "cat": "foreclosure",
+      "cat_label": "Lis Pendens",
+      "owner": "TUORTO ROBERT J",
+      "grantor": "DJ S LAWN AND LANDSCAPING INC",
+      "grantee": "TUORTO ROBERT J",
+      "lookup_name": "",
+      "amount": 0.0,
+      "legal": "CELEBRATION EAST VILLAGE UNIT 1",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "FL",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "FL",
+      "mail_zip": "",
+      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026074929",
+      "flags": [
+        "Lis pendens",
+        "Pre-foreclosure"
+      ],
+      "score": 70
+    },
     {
       "doc_num": "2026081534",
       "doc_type": "LP",
@@ -31,10 +58,9 @@
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026081534",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure",
-        "New this week"
+        "Pre-foreclosure"
       ],
-      "score": 75
+      "score": 70
     },
     {
       "doc_num": "2026081394",
@@ -57,34 +83,6 @@
       "mail_state": "FL",
       "mail_zip": "",
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026081394",
-      "flags": [
-        "Lis pendens",
-        "Pre-foreclosure",
-        "New this week"
-      ],
-      "score": 75
-    },
-    {
-      "doc_num": "2026074929",
-      "doc_type": "LP",
-      "filed": "2026-06-08",
-      "cat": "foreclosure",
-      "cat_label": "Lis Pendens",
-      "owner": "TUORTO ROBERT J",
-      "grantor": "DJ S LAWN AND LANDSCAPING INC",
-      "grantee": "TUORTO ROBERT J",
-      "lookup_name": "",
-      "amount": 0.0,
-      "legal": "CELEBRATION EAST VILLAGE UNIT 1",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "FL",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "FL",
-      "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026074929",
       "flags": [
         "Lis pendens",
         "Pre-foreclosure"
