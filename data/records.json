@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-08-13T08:09:51.258252",
+  "fetched_at": "2026-08-14T08:05:35.084555",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
-    "from": "07/14/2026",
-    "to": "08/13/2026"
+    "from": "07/15/2026",
+    "to": "08/14/2026"
   },
-  "total": 29,
+  "total": 30,
   "with_address": 0,
   "records": [
     {
@@ -29,6 +29,34 @@
       "mail_state": "FL",
       "mail_zip": "",
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026104663",
+      "flags": [
+        "Lis pendens",
+        "Pre-foreclosure",
+        "New this week"
+      ],
+      "score": 75
+    },
+    {
+      "doc_num": "2026106106",
+      "doc_type": "LP",
+      "filed": "2026-08-13",
+      "cat": "foreclosure",
+      "cat_label": "Lis Pendens",
+      "owner": "FAJARDO JOSE",
+      "grantor": "LONGBRIDGE FINANCIAL LLC",
+      "grantee": "FAJARDO JOSE",
+      "lookup_name": "",
+      "amount": 0.0,
+      "legal": "FOXLEIGH MANOR PHASE I",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "FL",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "FL",
+      "mail_zip": "",
+      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026106106",
       "flags": [
         "Lis pendens",
         "Pre-foreclosure",
