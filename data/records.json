@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-09-08T11:51:27.660097",
+  "fetched_at": "2026-09-10T11:56:08.100807",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
-    "from": "08/09/2026",
-    "to": "09/08/2026"
+    "from": "08/11/2026",
+    "to": "09/10/2026"
   },
-  "total": 6,
+  "total": 7,
   "with_address": 0,
   "records": [
     {
@@ -38,17 +38,17 @@
       "score": 75
     },
     {
-      "doc_num": "2026114722",
+      "doc_num": "2026117669",
       "doc_type": "LP",
-      "filed": "2026-09-02",
+      "filed": "2026-09-09",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "CELEBRATION COMMUNITY DEVELOPMENT DISTRICT",
-      "grantor": "FLORIDA DEPARTMENT OF TRANSPORTATION",
-      "grantee": "CELEBRATION COMMUNITY DEVELOPMENT DISTRICT",
+      "owner": "DE LIMA WAMBAR A MEDEIROS",
+      "grantor": "CROSSCOUNTRY MORTGAGE LLC",
+      "grantee": "DE LIMA WAMBAR A MEDEIROS",
       "lookup_name": "",
       "amount": 0.0,
-      "legal": "CELEBRATION BOULEVARD EXTENSION",
+      "legal": "GRAMERCY FARMS PHASE 9B",
       "prop_address": "",
       "prop_city": "",
       "prop_state": "FL",
@@ -57,7 +57,7 @@
       "mail_city": "",
       "mail_state": "FL",
       "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026114722",
+      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026117669",
       "flags": [
         "Lis pendens",
         "Pre-foreclosure",
@@ -93,6 +93,33 @@
         "New this week"
       ],
       "score": 75
+    },
+    {
+      "doc_num": "2026114722",
+      "doc_type": "LP",
+      "filed": "2026-09-02",
+      "cat": "foreclosure",
+      "cat_label": "Lis Pendens",
+      "owner": "CELEBRATION COMMUNITY DEVELOPMENT DISTRICT",
+      "grantor": "FLORIDA DEPARTMENT OF TRANSPORTATION",
+      "grantee": "CELEBRATION COMMUNITY DEVELOPMENT DISTRICT",
+      "lookup_name": "",
+      "amount": 0.0,
+      "legal": "CELEBRATION BOULEVARD EXTENSION",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "FL",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "FL",
+      "mail_zip": "",
+      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026114722",
+      "flags": [
+        "Lis pendens",
+        "Pre-foreclosure"
+      ],
+      "score": 70
     },
     {
       "doc_num": "2026104663",
