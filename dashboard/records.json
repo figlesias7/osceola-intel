@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-09-16T12:17:12.920888",
+  "fetched_at": "2026-09-17T12:16:53.408019",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
-    "from": "08/17/2026",
-    "to": "09/16/2026"
+    "from": "08/18/2026",
+    "to": "09/17/2026"
   },
   "total": 6,
   "with_address": 0,
@@ -29,34 +29,6 @@
       "mail_state": "FL",
       "mail_zip": "",
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026119992",
-      "flags": [
-        "Lis pendens",
-        "Pre-foreclosure",
-        "New this week"
-      ],
-      "score": 75
-    },
-    {
-      "doc_num": "2026117669",
-      "doc_type": "LP",
-      "filed": "2026-09-09",
-      "cat": "foreclosure",
-      "cat_label": "Lis Pendens",
-      "owner": "DE LIMA WAMBAR A MEDEIROS",
-      "grantor": "CROSSCOUNTRY MORTGAGE LLC",
-      "grantee": "DE LIMA WAMBAR A MEDEIROS",
-      "lookup_name": "",
-      "amount": 0.0,
-      "legal": "GRAMERCY FARMS PHASE 9B",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "FL",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "FL",
-      "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026117669",
       "flags": [
         "Lis pendens",
         "Pre-foreclosure",
@@ -140,6 +112,33 @@
       "mail_state": "FL",
       "mail_zip": "",
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026112105",
+      "flags": [
+        "Lis pendens",
+        "Pre-foreclosure"
+      ],
+      "score": 70
+    },
+    {
+      "doc_num": "2026117669",
+      "doc_type": "LP",
+      "filed": "2026-09-09",
+      "cat": "foreclosure",
+      "cat_label": "Lis Pendens",
+      "owner": "DE LIMA WAMBAR A MEDEIROS",
+      "grantor": "CROSSCOUNTRY MORTGAGE LLC",
+      "grantee": "DE LIMA WAMBAR A MEDEIROS",
+      "lookup_name": "",
+      "amount": 0.0,
+      "legal": "GRAMERCY FARMS PHASE 9B",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "FL",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "FL",
+      "mail_zip": "",
+      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026117669",
       "flags": [
         "Lis pendens",
         "Pre-foreclosure"
