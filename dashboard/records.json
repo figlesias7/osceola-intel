@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-10-08T14:08:35.683055",
+  "fetched_at": "2026-10-10T13:07:55.842125",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
-    "from": "09/08/2026",
-    "to": "10/08/2026"
+    "from": "09/10/2026",
+    "to": "10/10/2026"
   },
-  "total": 6,
+  "total": 5,
   "with_address": 0,
   "records": [
     {
@@ -29,34 +29,6 @@
       "mail_state": "FL",
       "mail_zip": "",
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026128543",
-      "flags": [
-        "Lis pendens",
-        "Pre-foreclosure",
-        "New this week"
-      ],
-      "score": 75
-    },
-    {
-      "doc_num": "2026126998",
-      "doc_type": "LP",
-      "filed": "2026-10-01",
-      "cat": "foreclosure",
-      "cat_label": "Lis Pendens",
-      "owner": "SEGOVIA DIAZ JORGE OMAR",
-      "grantor": "JPMORGAN CHASE BANK NATIONAL ASSOCIATION",
-      "grantee": "SEGOVIA DIAZ JORGE OMAR",
-      "lookup_name": "",
-      "amount": 0.0,
-      "legal": "STONEYBROOK SOUTH NORTH PARCEL - PHASE 7",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "FL",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "FL",
-      "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026126998",
       "flags": [
         "Lis pendens",
         "Pre-foreclosure",
@@ -92,17 +64,17 @@
       "score": 70
     },
     {
-      "doc_num": "2026117669",
+      "doc_num": "2026126998",
       "doc_type": "LP",
-      "filed": "2026-09-09",
+      "filed": "2026-10-01",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "DE LIMA WAMBAR A MEDEIROS",
-      "grantor": "CROSSCOUNTRY MORTGAGE LLC",
-      "grantee": "DE LIMA WAMBAR A MEDEIROS",
+      "owner": "SEGOVIA DIAZ JORGE OMAR",
+      "grantor": "JPMORGAN CHASE BANK NATIONAL ASSOCIATION",
+      "grantee": "SEGOVIA DIAZ JORGE OMAR",
       "lookup_name": "",
       "amount": 0.0,
-      "legal": "GRAMERCY FARMS PHASE 9B",
+      "legal": "STONEYBROOK SOUTH NORTH PARCEL - PHASE 7",
       "prop_address": "",
       "prop_city": "",
       "prop_state": "FL",
@@ -111,7 +83,7 @@
       "mail_city": "",
       "mail_state": "FL",
       "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026117669",
+      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026126998",
       "flags": [
         "Lis pendens",
         "Pre-foreclosure"
