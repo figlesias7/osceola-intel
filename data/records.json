@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-10-13T14:39:32.184924",
+  "fetched_at": "2026-10-14T12:32:01.111279",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
-    "from": "09/13/2026",
-    "to": "10/13/2026"
+    "from": "09/14/2026",
+    "to": "10/14/2026"
   },
-  "total": 6,
+  "total": 7,
   "with_address": 0,
   "records": [
     {
@@ -37,17 +37,17 @@
       "score": 75
     },
     {
-      "doc_num": "2026128543",
+      "doc_num": "2026132037",
       "doc_type": "LP",
-      "filed": "2026-10-06",
+      "filed": "2026-10-14",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "GARCIA JEAN CARLOS ARIAS",
-      "grantor": "CARRINGTON MORTGAGE SERVICES LLC",
-      "grantee": "GARCIA JEAN CARLOS ARIAS",
+      "owner": "CHAMBERS LLOYD O",
+      "grantor": "LAKE POINTE AT TOHO HOMEOWNERS ASSOCIATION INC",
+      "grantee": "CHAMBERS LLOYD O",
       "lookup_name": "",
       "amount": 0.0,
-      "legal": "SUNCREST",
+      "legal": "LAKE POINTE",
       "prop_address": "",
       "prop_city": "",
       "prop_state": "FL",
@@ -56,7 +56,7 @@
       "mail_city": "",
       "mail_state": "FL",
       "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026128543",
+      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026132037",
       "flags": [
         "Lis pendens",
         "Pre-foreclosure",
@@ -85,6 +85,33 @@
       "mail_state": "FL",
       "mail_zip": "",
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026119992",
+      "flags": [
+        "Lis pendens",
+        "Pre-foreclosure"
+      ],
+      "score": 70
+    },
+    {
+      "doc_num": "2026128543",
+      "doc_type": "LP",
+      "filed": "2026-10-06",
+      "cat": "foreclosure",
+      "cat_label": "Lis Pendens",
+      "owner": "GARCIA JEAN CARLOS ARIAS",
+      "grantor": "CARRINGTON MORTGAGE SERVICES LLC",
+      "grantee": "GARCIA JEAN CARLOS ARIAS",
+      "lookup_name": "",
+      "amount": 0.0,
+      "legal": "SUNCREST",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "FL",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "FL",
+      "mail_zip": "",
+      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026128543",
       "flags": [
         "Lis pendens",
         "Pre-foreclosure"
