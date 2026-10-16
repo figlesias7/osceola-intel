@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-10-14T12:32:01.111279",
+  "fetched_at": "2026-10-16T11:58:58.319740",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
-    "from": "09/14/2026",
-    "to": "10/14/2026"
+    "from": "09/16/2026",
+    "to": "10/16/2026"
   },
   "total": 7,
   "with_address": 0,
@@ -65,17 +65,17 @@
       "score": 75
     },
     {
-      "doc_num": "2026119992",
+      "doc_num": "2026132472",
       "doc_type": "LP",
-      "filed": "2026-09-15",
+      "filed": "2026-10-15",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "ADVANCIAL FEDERAL CREDIT UNION",
-      "grantor": "FOUNTAINS AT CHAMPIONSGATE TOWNHOMES OWNERS ASSOCIATION INC",
-      "grantee": "ADVANCIAL FEDERAL CREDIT UNION",
+      "owner": "VALENTIN DAVID",
+      "grantor": "WESTSIDE MURANO TOWNHOME OWNERS ASSOCIATION INC",
+      "grantee": "VALENTIN DAVID",
       "lookup_name": "",
       "amount": 0.0,
-      "legal": "FOUNTAINS AT CHAMPIONSGATE PHASE 1 - A REPLAT",
+      "legal": "MURANO AT WESTSIDE",
       "prop_address": "",
       "prop_city": "",
       "prop_state": "FL",
@@ -84,12 +84,13 @@
       "mail_city": "",
       "mail_state": "FL",
       "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026119992",
+      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026132472",
       "flags": [
         "Lis pendens",
-        "Pre-foreclosure"
+        "Pre-foreclosure",
+        "New this week"
       ],
-      "score": 70
+      "score": 75
     },
     {
       "doc_num": "2026128543",
