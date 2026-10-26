@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-10-25T12:10:43.501499",
+  "fetched_at": "2026-10-26T13:40:56.382353",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
-    "from": "09/25/2026",
-    "to": "10/25/2026"
+    "from": "09/26/2026",
+    "to": "10/26/2026"
   },
   "total": 9,
   "with_address": 0,
@@ -14,12 +14,12 @@
       "filed": "2026-10-23",
       "cat": "foreclosure",
       "cat_label": "Lis Pendens",
-      "owner": "FIRST PARTY",
-      "grantor": "FIRST PARTY",
-      "grantee": "",
+      "owner": "LOPEZ HILDA MARIA RODRIGUEZ",
+      "grantor": "VALLES ALEXIS R GONZALEZ",
+      "grantee": "LOPEZ HILDA MARIA RODRIGUEZ",
       "lookup_name": "",
       "amount": 0.0,
-      "legal": "",
+      "legal": "HANOVER LAKES PHASE 3",
       "prop_address": "",
       "prop_city": "",
       "prop_state": "FL",
