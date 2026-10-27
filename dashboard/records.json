@@ -1,13 +1,41 @@
 {
-  "fetched_at": "2026-10-26T13:40:56.382353",
+  "fetched_at": "2026-10-27T12:49:52.220034",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
-    "from": "09/26/2026",
-    "to": "10/26/2026"
+    "from": "09/27/2026",
+    "to": "10/27/2026"
   },
-  "total": 9,
+  "total": 10,
   "with_address": 0,
   "records": [
+    {
+      "doc_num": "2026136623",
+      "doc_type": "LP",
+      "filed": "2026-10-26",
+      "cat": "foreclosure",
+      "cat_label": "Lis Pendens",
+      "owner": "MONTERO RAFAEL A",
+      "grantor": "GRAHAM T J",
+      "grantee": "MONTERO RAFAEL A",
+      "lookup_name": "",
+      "amount": 0.0,
+      "legal": "BRIGHTON LAKES PHASE 2 - PARCEL J",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "FL",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "FL",
+      "mail_zip": "",
+      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026136623",
+      "flags": [
+        "Lis pendens",
+        "Pre-foreclosure",
+        "New this week"
+      ],
+      "score": 75
+    },
     {
       "doc_num": "2026136108",
       "doc_type": "LP",
