@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-11-15T14:24:07.961907",
+  "fetched_at": "2026-11-16T16:34:27.897413",
   "source": "Osceola County Official Records \u2013 officialrecords.osceolaclerk.org",
   "date_range": {
-    "from": "10/16/2026",
-    "to": "11/15/2026"
+    "from": "10/17/2026",
+    "to": "11/16/2026"
   },
-  "total": 8,
+  "total": 6,
   "with_address": 0,
   "records": [
     {
@@ -138,60 +138,6 @@
       "mail_state": "FL",
       "mail_zip": "",
       "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026141828",
-      "flags": [
-        "Lis pendens",
-        "Pre-foreclosure"
-      ],
-      "score": 70
-    },
-    {
-      "doc_num": "2026133429",
-      "doc_type": "LP",
-      "filed": "2026-10-16",
-      "cat": "foreclosure",
-      "cat_label": "Lis Pendens",
-      "owner": "GILMOUR SALLY A",
-      "grantor": "GILMOUR DAVID S",
-      "grantee": "GILMOUR SALLY A",
-      "lookup_name": "",
-      "amount": 0.0,
-      "legal": "ALLIGATOR LAKE VIEW",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "FL",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "FL",
-      "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026133429",
-      "flags": [
-        "Lis pendens",
-        "Pre-foreclosure"
-      ],
-      "score": 70
-    },
-    {
-      "doc_num": "2026133658",
-      "doc_type": "LP",
-      "filed": "2026-10-16",
-      "cat": "foreclosure",
-      "cat_label": "Lis Pendens",
-      "owner": "GILMOUR SALLY",
-      "grantor": "GILMOUR DAVIS S",
-      "grantee": "GILMOUR SALLY",
-      "lookup_name": "",
-      "amount": 0.0,
-      "legal": "ALLIGATOR LAKE VIEW",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "FL",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "FL",
-      "mail_zip": "",
-      "clerk_url": "https://officialrecords.osceolaclerk.org/browserview/?InstrumentNumber=2026133658",
       "flags": [
         "Lis pendens",
         "Pre-foreclosure"
